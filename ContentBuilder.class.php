@@ -2,15 +2,13 @@
 
 class ContentBuilder
 {
-	/// VARS ///
 	public static $template_extension = 'tpl';
 	public static $template_directory = 'templates';
 	public static $end_of_line = "\n";
 	public static $indentation_unit = "\t";
 	public static $singularize_plural_magic_keys = false;
-
+	public static $web_directory = 'public';
 	public static $site_path;
-	public static $web_directory = 'web';
 	public static $site_web_path;
 	public static $sitesketch_path;
 
@@ -100,8 +98,6 @@ class ContentBuilder
 
 		// Usually site path is one directory up from the site web path
 		self::$site_path = dirname(self::$site_web_path);
-
-		//echo 'DEBUG site path: '.self::$site_path."<br/>";
 
 		return self::$site_path;
 	}
@@ -367,7 +363,7 @@ class ContentBuilder
 									//echo '</pre>';
 									reset($value);
 									$first_key = key($value);
-									if (!empty($value[$first_key]) && !is_array($value[$first_key])) {
+									if (!empty($first_key) && !empty($value[$first_key]) && !is_array($value[$first_key])) {
 										if (self::$singularize_plural_magic_keys) {
 											$new_key = self::singularize($tag);
 										} else {

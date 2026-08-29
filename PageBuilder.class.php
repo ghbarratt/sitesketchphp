@@ -232,8 +232,11 @@
 
 			if(!$content_type) $content_type = $this->getContentType();
 
-			if(count($this->metas)) $metas = $this->metas;
-			else $metas = array();
+			if (isset($this->metas) && count($this->metas)) {
+				$metas = $this->metas;
+			} else {
+				$metas = [];
+			}
 			if($content_type) $metas[] = array('attribute'=>'http-equiv', 'attribute_value'=>'content-type', 'content'=>$content_type);
 			
 			if($description) $metas[] = array('attribute'=>'name', 'attribute_value'=>'description', 'content'=>$description);

@@ -34,7 +34,7 @@ class UserManager
 	protected $messages = array();
 	protected $warnings = array();
 
-	protected $db;
+	protected $dbh;
 	protected $cb;
 
 	protected $replacements = array();
@@ -43,10 +43,8 @@ class UserManager
 
 	// CLASS FUNCTIONS 
 
-	public function __construct($config)
+	public function __construct($config, $dbh=null)
 	{
-		global $dbh;
-
 		$this->cb = new ContentBuilder();
 		
 		if(!isset($_SESSION)) session_start();
@@ -318,25 +316,17 @@ class UserManager
 			print_r($this->errors);
 		}
 		return false;
-
-	}// logIn
-
+	}
 
 	public function logOut($options=null)
 	{
-		//if(!empty($options['skip_authentication']))
-		//{
-			//$user_id = $this->isUserEmail($email);
-		//}
-		//else $user_id = $this->isUserValid($email, $password, $options);
+		if (!isset($_SESSION)) {
+			session_start();
+		}
 		
 		unset($_SESSION[$this->session_key]);
+	}
 
-	}// logIn
-
-
-
-	
 	public function getUserID()
 	{
 		if(isset($this->user_id) && is_numeric($this->user_id)) return $this->user_id;
