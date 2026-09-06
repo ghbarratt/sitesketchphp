@@ -5,8 +5,6 @@
 	// part of the Sitesketch Framework
 	// property of AdeptSites
 	// developed by Glen H. Barratt
-	 
-	require_once 'ContentBuilder.class.php';
 
 
 	class PageBuilder 
@@ -477,8 +475,7 @@
 		public function getDTDContent($alias=false, $doctype_alias=false)
 		{
 
-			require_once 'ContentBuilder.class.php';
-			
+
 			if(!$alias) $alias = $this->getAlias();
 			if(!$doctype_alias) $doctype_alias = $this->getDoctypeAlias();
 

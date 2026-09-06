@@ -110,7 +110,7 @@
 		//$content .= "<!-- ".strtoupper($alias)." BUTTON STARTS HERE -->\n";
 
 		$content .= $line_prefix."<a href=\"".$link."\">\n";
-		$content .= $line_prefix."\t<img src=\"/images/button_".$alias.'_up.gif" alt="'.$alt.'" id="'.$id.'" name="'.$id.'" onmouseover="changeImage(\"".$id.'\',\'/images/button_\"".$alias.'_hover.gif\');" onmouseout="changeImage(\"".$id.'\',\'/images/button_'.$alias.'_up.gif\');" onmousedown="changeImage(\"".$id.'\',\'/images/button_'.$alias.'_down.gif\');" onmouseup="changeImage(\"".$id.'\',\'/images/button_'.$alias.'_hover.gif\');"'.$Extra.">\n";
+		$content .= $line_prefix."\t<img src=\"/images/button_".$alias.'_up.gif" alt="'.$alt.'" id="'.$id.'" name="'.$id.'" onmouseover="changeImage(\''.$id.'\', \'/images/button_'.$alias.'_hover.gif\');" onmouseout="changeImage(\''.$id.'\', \'/images/button_'.$alias.'_up.gif\');" onmousedown="changeImage(\''.$id.'\', \'/images/button_'.$alias.'_down.gif\');" onmouseup="changeImage(\''.$id.'\', \'/images/button_'.$alias.'_hover.gif\');" '.$extra.">\n";
 		$content .= $line_prefix."</a>\n";
 		//$content .= "<!-- ".strtoupper($alias)." BUTTON ENDS HERE -->\n";
 

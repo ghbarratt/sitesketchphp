@@ -6,8 +6,6 @@
 // property of Adept Sites LLC
 // developed by Glen H. Barratt
 
- 
-require_once 'ContentBuilder.class.php';
 
 
 class UserManager

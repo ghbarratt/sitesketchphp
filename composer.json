@@ -5,12 +5,12 @@
     "license": "MIT",
     "autoload": {
         "classmap": [
-            "."
+            "src/"
         ],
         "files": [
-            "general_functions.inc.php",
-            "general_content_functions.inc.php",
-            "form_input_content_functions.inc.php"
+            "src/general_functions.inc.php",
+            "src/general_content_functions.inc.php",
+            "src/form_input_content_functions.inc.php"
         ]
     }
 }

@@ -37,7 +37,6 @@ class SlideController
 
 		if(!isset(self::$site_path) || !self::$site_path)
 		{
-			require_once 'ContentBuilder.class.php';	
 			self::$site_path = ContentBuilder::getSitePath();
 		}
 
@@ -47,7 +46,6 @@ class SlideController
 		if($cb) self::$cb = $cb;
 		else 
 		{
-			require_once 'ContentBuilder.class.php';
 			self::$cb = new ContentBuilder();
 		}
 
@@ -58,7 +56,6 @@ class SlideController
 	{
 		if(!isset(self::$site_path) || !self::$site_path)
 		{
-			require_once 'ContentBuilder.class.php';	
 			self::$site_path = ContentBuilder::getSitePath();
 		}
 		return self::$site_path.DIRECTORY_SEPARATOR.self::$web_directory.DIRECTORY_SEPARATOR.'images'.DIRECTORY_SEPARATOR.'slides';
