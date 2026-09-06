@@ -3,6 +3,27 @@
     "description": "SitesketchPHP Microframework",
     "type": "library",
     "license": "MIT",
+    "homepage": "https://github.com/ghbarratt/sitesketchphp",
+    "keywords": [
+        "microframework",
+        "templates",
+        "sitesketch",
+        "php"
+    ],
+    "authors": [
+        {
+            "name": "Glen Barratt",
+            "email": "ghbarratt@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=8.1"
+    },
+    "suggest": {
+        "ext-pdo": "Required when using DatabaseSessionManager with PDO",
+        "ext-gd": "Required when using ThumbnailGenerator for image processing"
+    },
     "autoload": {
         "psr-4": {
             "Sitesketch\\": "src/"
