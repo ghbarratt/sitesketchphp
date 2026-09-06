@@ -1,5 +1,7 @@
 <?php
 
+namespace Sitesketch;
+
 class SlideController 
 {
 	

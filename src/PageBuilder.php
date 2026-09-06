@@ -1,5 +1,7 @@
 <?php
 
+namespace Sitesketch;
+
 	// PageBuilder class - builds pages
 	// 
 	// part of the Sitesketch Framework

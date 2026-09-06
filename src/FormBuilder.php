@@ -1,5 +1,6 @@
 <?php
 
+namespace Sitesketch;
 
 class FormBuilder extends ContentBuilder
 {

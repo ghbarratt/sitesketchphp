@@ -1,4 +1,6 @@
-<?php		
+<?php
+
+namespace Sitesketch;
 
 	// Thumbnail Generator
 	// by Glen H. Barratt of AdeptSites
