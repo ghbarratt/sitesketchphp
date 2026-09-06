@@ -72,8 +72,8 @@ class ContentBuilder
 			return self::$sitesketch_path;
 		}
 
-		// What is the directory of THIS file?
-		self::$sitesketch_path = dirname(__FILE__);
+		// What is the directory of the Sitesketch package root?
+		self::$sitesketch_path = dirname(__DIR__);
 
 		//echo 'DEBUG sitesketch_path: '.self::$sitesketch_path."<br/>";
 

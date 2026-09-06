@@ -6,8 +6,6 @@
 	//
 	// requires: Thumbnailer and ContentBuilder	
 
-	require_once 'ThumbnailGenerator.class.php';
-
 	class Slideshow extends ThumbnailGenerator
 	{
 
@@ -59,8 +57,6 @@
 
 		public function getContent($template=false, $additional_replacements=false)
 		{
-
-			require_once 'ContentBuilder.class.php';
 
 			if(!$template) $template = 'templates/slideshow.tpl';
 			if(!$this->images) $this->createThumbnails();
