@@ -1,4 +1,6 @@
-<?php	
+<?php
+
+namespace Sitesketch;
 
 	// Slideshow
 	// by Glen H. Barratt

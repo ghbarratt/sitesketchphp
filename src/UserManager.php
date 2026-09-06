@@ -1,11 +1,14 @@
 <?php
 
+namespace Sitesketch;
+
+use PDOException;
+
 // User Manager class - Manages user account
 // 
 // part of the Sitesketch Framework
 // property of Adept Sites LLC
 // developed by Glen H. Barratt
-
 
 
 class UserManager

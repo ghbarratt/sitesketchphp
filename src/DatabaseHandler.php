@@ -1,5 +1,10 @@
 <?php
 
+namespace Sitesketch;
+
+use MDB2;
+use PEAR;
+
 class DatabaseHandler
 {
 

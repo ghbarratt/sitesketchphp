@@ -1,5 +1,8 @@
 <?php
 
+namespace Sitesketch;
+
+use PDOException;
 
 class DatabaseSessionManager
 {

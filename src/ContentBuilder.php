@@ -1,5 +1,7 @@
 <?php
 
+namespace Sitesketch;
+
 class ContentBuilder
 {
 	public static $template_extension = 'tpl';

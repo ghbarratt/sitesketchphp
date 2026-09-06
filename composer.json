@@ -4,9 +4,9 @@
     "type": "library",
     "license": "MIT",
     "autoload": {
-        "classmap": [
-            "src/"
-        ],
+        "psr-4": {
+            "Sitesketch\\": "src/"
+        },
         "files": [
             "src/general_functions.inc.php",
             "src/general_content_functions.inc.php",
