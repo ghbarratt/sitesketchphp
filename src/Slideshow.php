@@ -60,7 +60,7 @@ namespace Sitesketch;
 		public function getContent($template=false, $additional_replacements=false)
 		{
 
-			if(!$template) $template = 'templates/slideshow.tpl';
+			if(!$template) $template = ContentBuilder::$template_directory . '/slideshow.tpl';
 			if(!$this->images) $this->createThumbnails();
 
 			//echo 'DEBUG images <pre>';
