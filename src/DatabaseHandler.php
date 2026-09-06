@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sitesketch;
 
 use MDB2;
@@ -15,7 +17,7 @@ class DatabaseHandler
 	private $type = 'pear_mdb2';
 	private $db;
 	private $last_sql;
-	private $errors = array();
+	private $errors = [];
 
 	
 	/// FUNCTIONS ///

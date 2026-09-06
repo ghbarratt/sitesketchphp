@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sitesketch;
 
 class ContentBuilder
@@ -35,7 +37,7 @@ class ContentBuilder
 	protected static $tag_close_prefix = '}';
 	protected static $tag_close_postfix = '~';
 
-	protected $errors = array();
+	protected $errors = [];
 
 
 	/// FUNCTIONS ///
@@ -122,8 +124,8 @@ class ContentBuilder
 
 		$this->has_placed_replacements = false;
 
-		$filepaths_to_try = array
-		(
+		$filepaths_to_try = 
+		[
 			$template,
 			self::getSitePath() . '/' . $template,
 			self::getSitePath() . '/' . self::$template_directory . '/' . $template,
@@ -131,7 +133,7 @@ class ContentBuilder
 			self::getSitesketchPath() . '/' . $template,
 			self::getSitesketchPath() . '/' . self::$template_directory . '/' . $template,
 			self::getSitesketchPath() . '/templates/' . $template
-		);
+		];
 
 		$template_found = false;
 		foreach ($filepaths_to_try as $fi => $filepath) {
@@ -191,7 +193,7 @@ class ContentBuilder
 
 	public function addReplacement($tag, $value)
 	{
-		$this->replacements = array_merge(array($tag => $value), $this->replacements);
+		$this->replacements = array_merge([$tag => $value], $this->replacements);
 	}
 
 
@@ -231,7 +233,7 @@ class ContentBuilder
 			if (isset($this->replacements) && is_array($this->replacements)) {
 				$replacements = $this->replacements;
 			} else {
-				$replacements = array();
+				$replacements = [];
 			}
 		}
 		//if(!$tag_prefix) $tag_prefix = self::$tag_prefix;
@@ -264,10 +266,10 @@ class ContentBuilder
 			//print_r($embed_tags);
 			//echo '</pre>';
 		} else {
-			$embed_tags = array();
+			$embed_tags = [];
 		}
 
-		$leftover_embed_tags = array();
+		$leftover_embed_tags = [];
 
 		//echo 'DEBUG The template content:<pre>'.$template_content.'</pre>';
 
@@ -373,9 +375,9 @@ class ContentBuilder
 										} else {
 											$new_key = $tag;
 										}
-										$new_value = array();
+										$new_value = [];
 										foreach ($value as $temp_index => $embed_replacements) {
-											$new_value[$temp_index] = array($new_key => $embed_replacements);
+											$new_value[$temp_index] = [$new_key => $embed_replacements];
 										}
 										$value = $new_value;
 										unset($new_value);
@@ -429,7 +431,7 @@ class ContentBuilder
 				//print_r($embed_tags);
 				//echo '</pre>';
 			} else {
-				$replacement_tags = array();
+				$replacement_tags = [];
 			}
 
 			foreach ($replacement_tags as $tag) {
@@ -464,7 +466,7 @@ class ContentBuilder
 					}
 
 					if (substr_count($value, self::$end_of_line)) {
-						$delete_end_characters = array(' ', "\n", "\r", "\t");
+						$delete_end_characters = [' ', "\n", "\r", "\t"];
 						$cutoff_pos = strlen($value) - 1;
 						if (strlen(trim($value))) {
 							while (in_array(substr($value, $cutoff_pos, 1), $delete_end_characters)) {
@@ -518,7 +520,7 @@ class ContentBuilder
 		//}
 
 		// Find eval tags
-		$pattern = '/' . str_replace(array('(',')'), array('\(','\)'), $this->eval_open_tag) . '(.+?)' . str_replace(array('(',')'), array('\(','\)'), $this->eval_close_tag) . '/';
+		$pattern = '/' . str_replace(['(',')'], ['\(','\)'], $this->eval_open_tag) . '(.+?)' . str_replace(['(',')'], ['\(','\)'], $this->eval_close_tag) . '/';
 		//echo 'DEBUG pattern for eval <pre>'.$pattern."</pre><br/>\n";
 		$match_count = preg_match_all($pattern, $content, $matches);
 
@@ -552,7 +554,7 @@ class ContentBuilder
 				$content = str_replace($to_replace[$index], $temp_result, $content);
 			}
 		} else {
-			$eval_tags = array();
+			$eval_tags = [];
 		}
 
 
@@ -619,7 +621,7 @@ class ContentBuilder
 			}
 		}
 
-		return file_get_contents($filepath, FILE_USE_INCLUDE_PATH);
+		return file_get_contents($filepath, true);
 	}
 
 
@@ -657,8 +659,8 @@ class ContentBuilder
 	*/
 	public static function singularize($word)
 	{
-		$singular = array
-		(
+		$singular = 
+		[
 			'/(quiz)zes$/i' => '\1',
 			'/(matr)ices$/i' => '\1ix',
 			'/(vert|ind)ices$/i' => '\1ex',
@@ -683,16 +685,16 @@ class ContentBuilder
 			'/([ti])a$/i' => '\1um',
 			'/(n)ews$/i' => '\1ews',
 			'/s$/i' => '',
-		);
+		];
 
-		$uncountable = array('equipment', 'information', 'rice', 'money', 'species', 'series', 'fish', 'sheep');
+		$uncountable = ['equipment', 'information', 'rice', 'money', 'species', 'series', 'fish', 'sheep'];
 
-		$irregular = array(
+		$irregular = [
 			'person' => 'people',
 			'man' => 'men',
 			'child' => 'children',
 			'sex' => 'sexes',
-			'move' => 'moves')
+			'move' => 'moves']
 		;
 
 		$lowercased_word = strtolower($word);
