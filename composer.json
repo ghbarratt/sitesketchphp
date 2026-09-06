@@ -8,9 +8,7 @@
             "Sitesketch\\": "src/"
         },
         "files": [
-            "src/general_functions.inc.php",
-            "src/general_content_functions.inc.php",
-            "src/form_input_content_functions.inc.php"
+            "src/helpers.php"
         ]
     }
 }
