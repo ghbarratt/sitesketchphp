@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sitesketch;
 
 	// Thumbnail Generator
@@ -194,7 +196,7 @@ namespace Sitesketch;
 			if(!$this->images || !is_array($this->images) || ($working_web_path && $working_web_path!=$this->working_web_path))
 			{
 
-				$this->images = array();
+				$this->images = [];
 
 				if(!$working_web_path && $this->working_web_path) $working_web_path = $this->working_web_path; 
 				else return false;
@@ -207,7 +209,7 @@ namespace Sitesketch;
 
 				//echo 'DEBUG working_path:'.$this->working_path."<br/>\n";
 
-				$filenames = array();
+				$filenames = [];
 				$dp = opendir($this->working_path);
 				while($filename = readdir($dp))
 				{
@@ -237,12 +239,12 @@ namespace Sitesketch;
 	
 						$web_filepath = $working_web_path.'/'.$filename;
 						//echo 'DEBUG Trying '.$web_filepath."<br/>\n";
-						$temp_image = array();
+						$temp_image = [];
 						if(is_file($this->webroot_path.$web_filepath))
 						{
 							$temp_image_data = @getimagesize($this->webroot_path.$web_filepath, $temp_extended_image_data);
 						}
-						$new_image_data = array();
+						$new_image_data = [];
 						$new_image_data['web_path'] = $working_web_path;
 						$new_image_data['filename'] = $filename;
 						$new_image_data['width'] = $temp_image_data[0];

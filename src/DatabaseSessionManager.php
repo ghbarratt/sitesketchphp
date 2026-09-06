@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sitesketch;
 
 use PDOException;
@@ -11,7 +13,7 @@ class DatabaseSessionManager
 	private static $session_code;
 	private static $sync_real_session;
 	private static $data;
-	private static $errors = array();
+	private static $errors = [];
 	private static $table_name = 'session';
 
 

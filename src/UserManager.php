@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sitesketch;
 
 use PDOException;
@@ -31,14 +33,14 @@ class UserManager
 	protected $email_column = 'email';	
 	protected $session_key = 'user_id';
 
-	protected $errors = array();
-	protected $messages = array();
-	protected $warnings = array();
+	protected $errors = [];
+	protected $messages = [];
+	protected $warnings = [];
 
 	protected $dbh;
 	protected $cb;
 
-	protected $replacements = array();
+	protected $replacements = [];
 
 	protected $user_id;	
 
@@ -106,14 +108,14 @@ class UserManager
 
 	public function addReplacements($replacements)
 	{
-		if(!is_array($this->replacements)) $this->replacements = array();
+		if(!is_array($this->replacements)) $this->replacements = [];
 		$this->replacements = array_merge($replacements, $this->replacements);
 	}// addReplacements
 
 
 	public function addReplacement($tag, $value)
 	{
-		$this->replacements = array_merge(array($tag=>$value), $this->replacements);
+		$this->replacements = array_merge([$tag=>$value], $this->replacements);
 	}// addReplacement
 
 
@@ -239,7 +241,7 @@ class UserManager
 		$sth = $this->dbh->prepare($sql);
 		try
 		{
-			$sth->execute(array($email));
+			$sth->execute([$email]);
 			return $sth->fetchColumn();
 		}
 		catch (PDOException $e)
@@ -269,7 +271,7 @@ class UserManager
 		$sth = $this->dbh->prepare($sql);
 		try
 		{
-			$sth->execute(array($email));
+			$sth->execute([$email]);
 			$user_data = $sth->fetch();
 		}
 		catch (PDOException $e)
@@ -351,7 +353,7 @@ class UserManager
 		$sth = $this->dbh->prepare($sql);
 		try
 		{
-			$sth->execute(array($user_id));
+			$sth->execute([$user_id]);
 			return $sth->fetch();
 		}
 		catch (PDOException $e)

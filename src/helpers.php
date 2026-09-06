@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Sitesketch Helper Functions
  */
@@ -8,16 +10,16 @@ if (!function_exists('isValidIP')) {
 	function isValidIP($ip)
 	{
 		if (!empty($ip) && ip2long($ip) != -1) {
-			$reserved_ips = array(
-				array('0.0.0.0', '2.255.255.255'),
-				array('10.0.0.0', '10.255.255.255'),
-				array('127.0.0.0', '127.255.255.255'),
-				array('169.254.0.0', '169.254.255.255'),
-				array('172.16.0.0', '172.31.255.255'),
-				array('192.0.2.0', '192.0.2.255'),
-				array('192.168.0.0', '192.168.255.255'),
-				array('255.255.255.0', '255.255.255.255')
-			);
+			$reserved_ips = [
+				['0.0.0.0', '2.255.255.255'],
+				['10.0.0.0', '10.255.255.255'],
+				['127.0.0.0', '127.255.255.255'],
+				['169.254.0.0', '169.254.255.255'],
+				['172.16.0.0', '172.31.255.255'],
+				['192.0.2.0', '192.0.2.255'],
+				['192.168.0.0', '192.168.255.255'],
+				['255.255.255.0', '255.255.255.255']
+			];
 			foreach ($reserved_ips as $r) {
 				$min = ip2long($r[0]);
 				$max = ip2long($r[1]);
@@ -118,18 +120,18 @@ if (!function_exists('getContentFromFile')) {
 			$content .= $line_prefix . $Line . "\n";
 		}
 
-		$replacements = array(
-			'elevated' => array(
+		$replacements = [
+			'elevated' => [
 				'start_tag' => '<span type="elevated">',
 				'end_tag' => '</span>',
 				'function' => 'wrapElevatedContent'
-			),
-			'quote' => array(
+			],
+			'quote' => [
 				'start_tag' => '<q>',
 				'end_tag' => '</q>',
 				'function' => 'wrapQuoteContent'
-			),
-		);
+			],
+		];
 
 		foreach ($replacements as $r) {
 			$start_position = strpos($content, $r['start_tag']);
@@ -398,24 +400,24 @@ if (!function_exists('getDateInputsContent')) {
 
 		$content = '';
 
-		$year_labels = array('year');
-		$year_values = array('');
+		$year_labels = ['year'];
+		$year_values = [''];
 		for ($temp_year = $min_year; $temp_year <= $max_year; $temp_year++) {
 			$year_labels[] = $temp_year;
 			$year_values[] = $temp_year;
 		}
 		$year_input_content = getSelectInputContent($alias . '[year]', $year_values, $year_labels, $default_year, $on_change);
 
-		$month_labels = array('month');
-		$month_values = array('');
+		$month_labels = ['month'];
+		$month_values = [''];
 		for ($temp_month = 1; $temp_month <= 12; $temp_month++) {
 			$month_labels[] = date('M', mktime(0, 0, 0, $temp_month, 1));
 			$month_values[] = $temp_month;
 		}
 		$month_input_content = getSelectInputContent($alias . '[month]', $month_values, $month_labels, $default_month, $on_change);
 
-		$day_labels = array('day');
-		$day_values = array('');
+		$day_labels = ['day'];
+		$day_values = [''];
 		for ($temp_day = 1; $temp_day <= 31; $temp_day++) {
 			$day_labels[] = $temp_day;
 			$day_values[] = $temp_day;
@@ -471,7 +473,7 @@ if (!function_exists('getDOBInputsContent')) {
 		if (isset($_POST['dob_year']) && $_POST['dob_year']) {
 			$default_year = $_POST['dob_year'];
 		}
-		$years = array();
+		$years = [];
 		for ($temp_year = intval(date('Y')) - $max_age; $temp_year <= intval(date('Y')) - ($min_age - 1); $temp_year++) {
 			$years[] = $temp_year;
 		}
@@ -482,8 +484,8 @@ if (!function_exists('getDOBInputsContent')) {
 		if (isset($_POST['dob_month']) && $_POST['dob_month']) {
 			$default_month = $_POST['dob_month'];
 		}
-		$months = array();
-		$month_labels = array();
+		$months = [];
+		$month_labels = [];
 		for ($temp_month = 1; $temp_month <= 12; $temp_month++) {
 			$month_labels[] = date('M', mktime(0, 0, 0, $temp_month, 1));
 			$months[] = $temp_month;
@@ -495,8 +497,8 @@ if (!function_exists('getDOBInputsContent')) {
 		if (isset($_POST['dob_day']) && $_POST['dob_day']) {
 			$default_day = $_POST['dob_day'];
 		}
-		$days = array();
-		$day_labels = array();
+		$days = [];
+		$day_labels = [];
 		for ($temp_day = 1; $temp_day <= 31; $temp_day++) {
 			$days[] = $temp_day;
 			$day_labels[] = $temp_day;

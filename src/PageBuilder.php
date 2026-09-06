@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sitesketch;
 
 	// PageBuilder class - builds pages
@@ -35,11 +37,11 @@ namespace Sitesketch;
 		protected $head_extra;
 		protected $body_attributes;
 
-		protected $errors = array();
+		protected $errors = [];
 
 		protected $cb;
 		
-		protected $replacements = array();
+		protected $replacements = [];
 
 		protected $description;
 		protected $keywords;
@@ -86,11 +88,11 @@ namespace Sitesketch;
 				if(strpos($url,'.')!==false) $url = substr($url, 0, strpos($url, '.')); 
 				while($url[0]=='/') $url = substr($url, 1); 
 				while($url[strlen($url)-1]=='/') $url = substr($url, 0, strlen($url)-1); 
-				$this->title = ucwords(str_replace(array('/', '_'), array(' - ', ' '), parse_url($url, PHP_URL_PATH)));
+				$this->title = ucwords(str_replace(['/', '_'], [' - ', ' '], parse_url($url, PHP_URL_PATH)));
 			}
 
 
-			if(!$this->alias) $this->alias = str_replace(array(' - ',' '), '_', strtolower($this->title));
+			if(!$this->alias) $this->alias = str_replace([' - ',' '], '_', strtolower($this->title));
 
 			//echo 'DEBUG site_title: '.$this->site_title.' title: '.$this->title.' and alias: '.$alias."<br/>\n";
 
@@ -101,7 +103,7 @@ namespace Sitesketch;
 			
 			$this->scripts = false;
 			$this->stylesheets = $site_stylesheets;
-			$this->templates = array();
+			$this->templates = [];
 			if($type) $this->setType($type);
 			else $this->type = false;
 
@@ -121,23 +123,23 @@ namespace Sitesketch;
 					{
 						$this->stylesheets = array_merge($this->stylesheets, $site_data['stylesheets']);
 					}
-					else $this->stylesheets[] = array('href'=>$site_data['stylesheets']);
+					else $this->stylesheets[] = ['href'=>$site_data['stylesheets']];
 				}
-				if(!empty($site_data['stylesheet'])) $this->stylesheets[] = array('href'=>$site_data['stylesheet']);
+				if(!empty($site_data['stylesheet'])) $this->stylesheets[] = ['href'=>$site_data['stylesheet']];
 			}
 
 			// TODO Possibly needs fix??
 			//if(!$this->stylesheets)
 			//{
 				$document_root_path = $_SERVER['DOCUMENT_ROOT'];
-				$attempt_to_add_css = array('/css/global.css', '/css/primary.css');
+				$attempt_to_add_css = ['/css/global.css', '/css/primary.css'];
 				if(isset($this->site_alias) && $this->site_alias) $attempt_to_add_css[] = '/css/'.$this->site_alias.'.css';
 				if(isset($this->type) && $this->type) $attempt_to_add_css[] = '/css/'.$this->type.'.css';
 				if(isset($this->alias) && $this->type) $attempt_to_add_css[] = '/css/'.$this->alias.'.css';
 	
 				foreach($attempt_to_add_css as $ac)
 				{
-					if(is_file($document_root_path.$ac)) $this->stylesheets[] = array('href'=>$ac);
+					if(is_file($document_root_path.$ac)) $this->stylesheets[] = ['href'=>$ac];
 				}
 			//}
 
@@ -169,8 +171,8 @@ namespace Sitesketch;
 			// if the type css is not present, add it
 			if(!$this->hasStylesheet('/css/'.$this->type.'.css')) 
 			{
-				if(!is_array($this->stylesheets)) $this->stylesheets = array();
-				$this->stylesheets = array_merge($this->stylesheets, array(0=>array('href'=>'/css/'.$this->type.'.css')));
+				if(!is_array($this->stylesheets)) $this->stylesheets = [];
+				$this->stylesheets = array_merge($this->stylesheets, [0=>['href'=>'/css/'.$this->type.'.css']]);
 			}
 
 		}// setType
@@ -237,9 +239,9 @@ namespace Sitesketch;
 			} else {
 				$metas = [];
 			}
-			if($content_type) $metas[] = array('attribute'=>'http-equiv', 'attribute_value'=>'content-type', 'content'=>$content_type);
+			if($content_type) $metas[] = ['attribute'=>'http-equiv', 'attribute_value'=>'content-type', 'content'=>$content_type];
 			
-			if($description) $metas[] = array('attribute'=>'name', 'attribute_value'=>'description', 'content'=>$description);
+			if($description) $metas[] = ['attribute'=>'name', 'attribute_value'=>'description', 'content'=>$description];
 			
 			if($keywords) 
 			{
@@ -249,7 +251,7 @@ namespace Sitesketch;
 				}
 				else $keywords_string = $keywords;
 
-				$metas[] = array('attribute'=>'name', 'attribute_value'=>'keywords', 'content'=>$keywords_string);
+				$metas[] = ['attribute'=>'name', 'attribute_value'=>'keywords', 'content'=>$keywords_string];
 			}
 
 			return $metas;
@@ -320,13 +322,13 @@ namespace Sitesketch;
 		public function getDefaultReplacements()
 		{
 			
-			return array
-			(
+			return 
+			[
 				'alias' => $this->getAlias(),
 				'type' => $this->type,
 				'doctype_alias' => $this->doctype_alias,
 				'this_year' => date('Y')
-			);
+			];
 
 		}// getDefaultReplacements
 
@@ -339,18 +341,18 @@ namespace Sitesketch;
 
 		public function addReplacements($replacements)
 		{
-			if(!is_array($this->replacements)) $this->replacements = array();
+			if(!is_array($this->replacements)) $this->replacements = [];
 			$this->replacements = array_merge($replacements, $this->replacements);
 		}// addReplacements
 
 
 		public function addStylesheets($stylesheets)
 		{
-			if(!is_array($this->stylesheets)) $this->stylesheets = array();
+			if(!is_array($this->stylesheets)) $this->stylesheets = [];
 			if(!is_array($stylesheets) && is_string($stylesheets)) return $this->addStylesheet($stylesheets);
 			foreach($stylesheets as $s)
 			{
-				if(!is_array($s) && is_string($s)) $this->stylesheets[] = array('href'=>$s);
+				if(!is_array($s) && is_string($s)) $this->stylesheets[] = ['href'=>$s];
 				else $this->stylesheets[] = $s;
 			}
 		}// addStylesheets
@@ -363,14 +365,14 @@ namespace Sitesketch;
 			//print_r($scripts);
 			//echo '</pre>';
 
-			if(!is_array($this->scripts)) $this->scripts = array();
+			if(!is_array($this->scripts)) $this->scripts = [];
 		
 			if(!is_array($scripts) && is_string($scripts)) return $this->addScript($scripts);
 			else 
 			{	
 				foreach($scripts as $s)
 				{
-					if(!is_array($s) && is_string($s)) $this->scripts[] = array('src'=>$s, 'type'=>'text/javascript');
+					if(!is_array($s) && is_string($s)) $this->scripts[] = ['src'=>$s, 'type'=>'text/javascript'];
 					else $this->scripts[] = $s;
 				}
 			}
@@ -381,14 +383,14 @@ namespace Sitesketch;
 
 		public function addReplacement($tag, $value)
 		{
-			$this->replacements = array_merge(array($tag=>$value), $this->replacements);
+			$this->replacements = array_merge([$tag=>$value], $this->replacements);
 		}// addReplacement
 
 
 		public function addStylesheet($href)
 		{
-			if(!isset($this->stylesheets) || !is_array($this->stylesheets)) $this->stylesheets = array();
-			$this->stylesheets = array_merge(array(0=>array('href'=>$href)), $this->stylesheets);
+			if(!isset($this->stylesheets) || !is_array($this->stylesheets)) $this->stylesheets = [];
+			$this->stylesheets = array_merge([0=>['href'=>$href]], $this->stylesheets);
 		}// addStylesheet
 
 		public function removeStylesheet($href)
@@ -413,9 +415,9 @@ namespace Sitesketch;
 
 		public function addScript($src, $type='text/javascript')
 		{
-			if(!is_array($this->scripts)) $this->scripts = array();
+			if(!is_array($this->scripts)) $this->scripts = [];
 
-			if(!is_array($src) && is_string($src)) $this->scripts[] = array('src'=>$src, 'type'=>$type);
+			if(!is_array($src) && is_string($src)) $this->scripts[] = ['src'=>$src, 'type'=>$type];
 			else $this->scripts[] = $src;
 		}// addScript
 
@@ -546,7 +548,7 @@ namespace Sitesketch;
 
 			$this->templates['dtd'] = $template;
 			$this->cb->reset($template);
-			$this->cb->setReplacements(array('access'=>$access, 'declaration'=>$declaration, 'link'=>$link));
+			$this->cb->setReplacements(['access'=>$access, 'declaration'=>$declaration, 'link'=>$link]);
 			if($this->cb->hasErrors()) 
 			{
 				$this->errors = array_merge($this->errors, $this->cb->getErrors());
@@ -567,7 +569,7 @@ namespace Sitesketch;
 			if(isset($this->scripts) && is_array($this->scripts) && count($this->scripts)) $scripts = $this->scripts;
 
 			// Place the site scripts in first
-			if(isset($site_scripts) && is_array($site_scripts) && count($site_scripts)) $scripts = array_merge($site_scripts, (is_array($scripts) ? $scripts : array()));
+			if(isset($site_scripts) && is_array($site_scripts) && count($site_scripts)) $scripts = array_merge($site_scripts, (is_array($scripts) ? $scripts : []));
 
 			if(is_array($scripts))
 			{
@@ -577,7 +579,7 @@ namespace Sitesketch;
 					if(!is_array($script) && strpos($script, '.'))
 					{
 						$script_src = $script;
-						$script = array();
+						$script = [];
 						$script['src'] = $script_src;
 						$script['type'] = 'text/javascript';
 					}
@@ -615,7 +617,7 @@ namespace Sitesketch;
 			$template = ContentBuilder::$template_directory.'/head.'.ContentBuilder::$template_extension;
 			if(isset($this->templates['head'])) $template = $this->templates['head'];
 
-			$replacements = array();
+			$replacements = [];
 			
 			if($title) $replacements['title'] = $title;
 
@@ -635,7 +637,7 @@ namespace Sitesketch;
 
 		public function hasType()
 		{
-			if(isset($this->type) && strlen($this->type)) return $this->type;
+			if(!empty($this->type)) return $this->type;
 			else return false;
 		}// hasType
 
@@ -673,7 +675,7 @@ namespace Sitesketch;
 			
 			if(!isset($site_path)) $site_path = ContentBuilder::getSitePath();
 
-			if(isset($this->footer_content) && strlen($this->footer_content)) return $this->footer_content;
+			if(!empty($this->footer_content)) return $this->footer_content;
 			
 			if(!$alias) $alias = $this->getAlias();
 			if(!$template) $template = $site_path.ContentBuilder::$template_directory.'/'.($this->hasType() ? $this->type.'_' : '').'footer.'.ContentBuilder::$template_extension;
@@ -713,7 +715,7 @@ namespace Sitesketch;
 
 			$body_inside_content = $this->getHeaderContent($alias).$normal_content.$this->getFooterContent($alias);
 
-			$replacements = array_merge(array('attributes'=>$attributes, 'inside'=>$body_inside_content), $replacements);			
+			$replacements = array_merge(['attributes'=>$attributes, 'inside'=>$body_inside_content], $replacements);			
 
 			$this->cb->reset(ContentBuilder::$template_directory.'/body.'.ContentBuilder::$template_extension, $replacements);
 
@@ -731,13 +733,13 @@ namespace Sitesketch;
 
 			//$page_inside_content = $this->getHeadContent($alias).$this->getBodyContent($alias);
 
-			$replacements = array
-			(
+			$replacements = 
+			[
 				'dtd' => $this->getDTDContent($alias),
 				'attributes' => '',
 				'head' => $this->getHeadContent($alias),
 				'body' => $this->getBodyContent($alias)
-			);
+			];
 
 			if(stripos($this->doctype_alias, 'xhtml')!==false) $replacements['attributes'] .= 'xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"';
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sitesketch;
 
 class SlideController 
@@ -13,11 +15,11 @@ class SlideController
 	private static $cb;	
 	private static $thumbnail_directory = 'thumbnail';
 	private static $thumbnail_size_alias = 'thumbnail';
-	private static $possible_extensions = array('.jpg', '.gif', '.png', '.jpeg', '.JPG', '.GIF', '.PNG');
+	private static $possible_extensions = ['.jpg', '.gif', '.png', '.jpeg', '.JPG', '.GIF', '.PNG'];
 	private static $change_group = 'dev';
 
 	static private $debugging = false; //true;
-	private static $thumbnail_sizes = array();
+	private static $thumbnail_sizes = [];
 
 	private $slides_subpath;
 	private $template = 'slide_controls.tpl';
@@ -78,7 +80,7 @@ class SlideController
 		foreach($slide_collection_aliases as &$sca) $sca = str_replace($slides_path.DIRECTORY_SEPARATOR, '', $sca);
 
 
-		$slide_collections = array();
+		$slide_collections = [];
 
 		// Now for each of these slide collections, scan the directories to find
 		foreach($slide_collection_aliases as &$sca)
@@ -125,7 +127,7 @@ class SlideController
 		$thumbnail_candidates = glob($slides_path.DIRECTORY_SEPARATOR.$subpath.DIRECTORY_SEPARATOR.self::$thumbnail_directory.DIRECTORY_SEPARATOR.'*');
 
 
-		$thumbnails = array();
+		$thumbnails = [];
 
 		// Clean out directories
 		// Clean off the slide path
@@ -136,11 +138,11 @@ class SlideController
 			{
 				if(stripos($tc,$pe)!==false)
 				{
-					$new_thumbnail = array
-					(
+					$new_thumbnail = 
+					[
 						'filename' => str_replace($slides_path.DIRECTORY_SEPARATOR.$subpath.DIRECTORY_SEPARATOR.self::$thumbnail_directory.DIRECTORY_SEPARATOR, '', $tc),
 						'thumbnail_server_filepath' => $tc,
-					);
+					];
 					$new_thumbnail['thumbnail_web_filepath'] = self::$slides_webpath.($this->slides_subpath ? $this->slides_subpath.DIRECTORY_SEPARATOR : '').self::$thumbnail_size_alias.DIRECTORY_SEPARATOR.$new_thumbnail['filename'];
 					$new_thumbnail['original_web_filepath'] = self::$slides_webpath.($this->slides_subpath ? $this->slides_subpath.DIRECTORY_SEPARATOR : '').$new_thumbnail['filename'];
 					break;
@@ -171,7 +173,7 @@ class SlideController
 		// What are the slide collections? - the directories under the slides_path should tell us
 		$slide_candidates = glob($slides_path.DIRECTORY_SEPARATOR.$subpath.DIRECTORY_SEPARATOR.'*');
 
-		$slides = array();
+		$slides = [];
 
 		// Clean out directories
 		// Clean off the slide path

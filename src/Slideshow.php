@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sitesketch;
 
 	// Slideshow
@@ -73,8 +75,8 @@ namespace Sitesketch;
 				$i['slideshow_alias'] = $this->alias;
 			}
 
-			$replacements = array
-			(
+			$replacements = 
+			[
 				'alias'                      => $this->alias,
 				'images'                     => $this->images,
  			 	'image_count'                => count($this->images),
@@ -83,7 +85,7 @@ namespace Sitesketch;
 				'viewport_width'             => $this->thumbnail_sizes[$this->viewport_size]['width'],
 				'viewport_height'            => $this->thumbnail_sizes[$this->viewport_size]['height']
 				//'initial_image_alt' => $this->images[0]['alt'],
-			);
+			];
 			if(isset($this->images[0]))	$replacements['initial_image_web_filepath'] = $this->images[0]['thumbnail_web_filepaths'][$this->viewport_size];
 
 			if($additional_replacements && is_array($additional_replacements)) $replacements = array_merge($replacements, $additional_replacements); 

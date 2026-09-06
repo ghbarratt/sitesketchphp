@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sitesketch;
 
 class FormBuilder extends ContentBuilder
@@ -35,7 +37,7 @@ class FormBuilder extends ContentBuilder
 		//echo '</pre>';
 	
 		if($data && is_array($data)) $this->data = $data;
-		else if(!isset($this->data) || !is_array($this->data)) $this->data = array();
+		else if(!isset($this->data) || !is_array($this->data)) $this->data = [];
 
 		// If validation not attempted, validate
 		if(!$this->validation_attempted)
