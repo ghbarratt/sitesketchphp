@@ -7,7 +7,7 @@ namespace Sitesketch;
 class ContentBuilder
 {
     public static $template_extension = 'tpl';
-    public static $template_directory = 'resources/templates';
+    public static $template_directory = 'templates';
     public static $end_of_line = "\n";
     public static $indentation_unit = "\t";
     public static $singularize_plural_magic_keys = false;
@@ -138,9 +138,9 @@ class ContentBuilder
             self::getSitePath() . '/' . $template,
             self::getSitePath() . '/' . self::$template_directory . '/' . $template,
             self::getSitePath() . '/templates/' . $template,
-            self::getSitesketchPath() . '/' . $template,
-            self::getSitesketchPath() . '/' . self::$template_directory . '/' . $template,
-            self::getSitesketchPath() . '/templates/' . $template
+            self::getSitesketchPath() . '/resources/' . $template,
+            self::getSitesketchPath() . '/resources/' . self::$template_directory . '/' . $template,
+            self::getSitesketchPath() . '/resources/templates/' . $template
         ];
 
         $template_found = false;
@@ -148,6 +148,7 @@ class ContentBuilder
             if (is_file($filepath)) {
                 $this->template = $filepath;
                 $template_found = true;
+                break;
             }
         }
 
