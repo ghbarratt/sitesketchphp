@@ -428,7 +428,7 @@ class ContentBuilder
                         $value = $new_value;
                     }
 
-                    if (substr_count($value, self::$end_of_line)) {
+                    if (is_string($value) && substr_count($value, self::$end_of_line)) {
                         $delete_end_characters = [' ', "\n", "\r", "\t"];
                         $cutoff_pos = strlen($value) - 1;
                         if (strlen(trim($value))) {
@@ -466,6 +466,11 @@ class ContentBuilder
                                 }
                             }
                         }
+                    }
+
+                    // TODO? Something better with bools?
+                    if (is_bool($value)) {
+                        $value = (string) $value;
                     }
 
                     $content = str_replace(self::$tag_prefix . $tag . self::$tag_postfix, $value, $content);
