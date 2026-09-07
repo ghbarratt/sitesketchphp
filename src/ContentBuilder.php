@@ -468,8 +468,8 @@ class ContentBuilder
                         }
                     }
 
-                    // TODO? Something better with bools?
-                    if (is_bool($value)) {
+                    // TODO? Something better with bools and ints?
+                    if (is_bool($value) || is_int($value)) {
                         $value = (string) $value;
                     }
 
