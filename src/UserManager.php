@@ -5,16 +5,12 @@ declare(strict_types=1);
 namespace Sitesketch;
 
 use PDOException;
-
-// User Manager class - Manages user account
-//
-// part of the Sitesketch Framework
-// property of Adept Sites LLC
-// developed by Glen H. Barratt
-
+use Sitesketch\Traits\DatabaseHandlerTrait;
 
 class UserManager
 {
+    use DatabaseHandlerTrait;
+
     protected $hashing_passwords = true;
     protected $hash_method = 'sha256';
 
@@ -35,7 +31,6 @@ class UserManager
     protected $messages = [];
     protected $warnings = [];
 
-    protected $dbh;
     protected $cb;
 
     protected $replacements = [];
@@ -43,7 +38,7 @@ class UserManager
     protected $user_id;
 
 
-    public function __construct($config, $dbh = null)
+    public function __construct(array|null $config, PDO|null $pdo = null)
     {
         $this->cb = new ContentBuilder();
 
@@ -51,11 +46,17 @@ class UserManager
             session_start();
         }
 
-        if (!empty($config['dbh']) && is_object($config['dbh'])) {
-            $this->dbh = $config['dbh'];
-        } elseif (isset($dbh) && is_object($dbh)) {
-            $this->dbh = $dbh;
+        // If passing in a PDO instance feels right to you, do that. Alternatively you can use the just-in-time ("lazy")
+        // static singleton that comes with the DatabaseHandlerTrait
+        if (!empty($config['pdo']) && is_object($config['pdo'])) {
+            self::$pdo = $config['pdo'];
+        } elseif (!empty($config['dbh']) && is_object($config['dbh'])) {
+            self::$pdo = $config['dbh'];
         } else {
+            self::$pdo = self::getPdo();
+        }
+
+        if (empty(self::$pdo)) {
             die('You must have a database connection established in order to use the User Manager.');
         }
 
@@ -145,14 +146,14 @@ class UserManager
         //echo 'DEBUG sql <pre>'.$sql.'</pre>';
 
         try {
-            $count = $this->dbh->exec($sql);
+            $count = self::$pdo->exec($sql);
         } catch (PDOException $e) {
             $this->errors[] = 'There was an SQL error trying to insert user: ' . $e->getMessage() . "\n DEBUG sql: "
                 . $sql;
         }
 
         if (!empty($count)) {
-            return $this->dbh->lastInsertId();
+            return self::$pdo->lastInsertId();
         }
 
         return false;
@@ -233,7 +234,7 @@ class UserManager
 			WHERE ' . $this->email_column . ' = ?
 		';
 
-        $sth = $this->dbh->prepare($sql);
+        $sth = self::$pdo->prepare($sql);
         try {
             $sth->execute([$email]);
             return $sth->fetchColumn();
@@ -258,7 +259,7 @@ class UserManager
 			WHERE " . $this->email_column . " = ?
 		";
 
-        $sth = $this->dbh->prepare($sql);
+        $sth = self::$pdo->prepare($sql);
         try {
             $sth->execute([$email]);
             $user_data = $sth->fetch();
@@ -331,7 +332,7 @@ class UserManager
 			WHERE u.' . $this->id_column . ' = ?
 		';
 
-        $sth = $this->dbh->prepare($sql);
+        $sth = self::$pdo->prepare($sql);
         try {
             $sth->execute([$user_id]);
             return $sth->fetch();
