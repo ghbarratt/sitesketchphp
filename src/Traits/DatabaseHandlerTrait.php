@@ -14,18 +14,17 @@ trait DatabaseHandlerTrait
     /**
      * Get the shared PDO instance, establishing the connection JIT if needed.
      */
-    protected static function getPdo(string|null $configFilePath = null): PDO
+    protected static function getPdo(string|null $credentialsFilepath = null): PDO
     {
         if (self::$pdo === null) {
-            if (empty($configFilePath)) {
-                // __DIR__ is assumed to be /path/to/<project>/<domain>/vendor/ghbarratt/sitesketchphp/src/Traits
-                $configFilePath = __DIR__ . '/../../../../../../shared/config/database.php';
+            if (empty($credentialsFilepath)) {
+                $credentialsFilepath = __DIR__ . '/../../../../../src/database_credentials.php';
             }
 
-            if (!file_exists($configFilePath)) {
-                throw new RuntimeException("Database configuration file not found at: {$configFilePath}");
+            if (!file_exists($credentialsFilepath)) {
+                throw new RuntimeException('Database credentials file not found at: ' . $credentialsFilepath);
             }
-            $config = require $configFilePath;
+            $config = require $credentialsFilepath;
 
             try {
                 self::$pdo = new PDO(
