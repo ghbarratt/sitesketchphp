@@ -577,16 +577,6 @@ class ContentBuilder
         $this->render();
     }
 
-    // TODO Move this function out of this class and into a locale class
-    /**
-    * Singularizes English nouns.
-    * Credit: http://www.kavoir.com/2011/04/php-class-converting-plural-to-singular-or-vice-versa-in-english.html
-    *
-    * @access public
-    * @static
-    * @param  string $word  English noun to singularize
-    * @return string Singular noun.
-    */
     public static function singularize($word)
     {
         $singular = [
