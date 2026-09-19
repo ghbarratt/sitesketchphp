@@ -4,91 +4,69 @@ declare(strict_types=1);
 
 namespace Sitesketch;
 
-    // PageBuilder class - builds pages
-    //
-    // part of the Sitesketch Framework
-    // property of AdeptSites
-    // developed by Glen H. Barratt
-
-
 class PageBuilder
 {
-    // CLASS VARS
+    public static $site_keywords;
+    public static $site_description;
+    public static $site_head_extra;
+    public static $site_path;
+    public static $site_alias;
+    public static $site_title;
+    public static $site_scripts;
+    public static $site_stylesheets;
+    public static $site_icon;
 
     public $alias;
-    public $site_alias;
-    public $site_title;
-    public $title = '';
     public $type = '';
+    public $title = '';
 
+    protected $replacements = [];
+
+    protected $description;
+    protected $keywords;
     protected $doctype_alias;
     protected $uri;
-
-    protected $header_content;
-    protected $footer_content;
-    protected $body_content;
-    protected $icon;
-
     protected $templates;
     protected $stylesheets;
     protected $scripts;
     protected $metas;
     protected $head_extra;
     protected $body_attributes;
+    protected $icon;
 
-    protected $errors = [];
+    protected $header_content;
+    protected $footer_content;
+    protected $body_content;
 
     protected $cb;
 
-    protected $replacements = [];
-
-    protected $description;
-    protected $keywords;
+    protected $errors = [];
 
 
-    // CLASS FUNCTIONS
-
-    public function __construct($alias = false, $replacements = false, $type = false, $title = false)
+    public function __construct(string|null $alias = null, array|null $replacements = null, string|null $type = null, string|null $title = null)
     {
-
         $this->cb = new ContentBuilder();
-        if ($title) {
-            $this->title = $title;
-        } else {
+        if (empty($title) && !empty($alias)) {
             $title = ucwords(str_replace('_', ' ', $alias));
         }
         $this->reset($alias, $replacements, $type, $title);
     }
 
-    public function reset($alias = false, $replacements = false, $type = false, $title = false)
+    public function reset(string|null $alias = null, array|null $replacements = null, string|null $type = null, string|null $title = null)
     {
-
-        global $site_alias;
-        global $site_title;
-        global $site_data;
-        global $site_stylesheets;
-
-        if ($alias) {
+        if (!empty($alias)) {
             $this->alias = $alias;
         }
-        if (empty($this->site_alias)) {
-            if (!empty($site_alias)) {
-                $this->site_alias = $site_alias;
-            } elseif (!empty($site_data) && !empty($site_data['alias'])) {
-                $this->site_alias = $site_data['alias'];
-            }
+
+        if (!empty($replacements) && is_array($replacements)) {
+            $this->replacements = $replacements;
         }
 
-        if (isset($site_title)) {
-            $this->site_title = $site_title;
-        } elseif (!empty($site_data) && !empty($site_data['title'])) {
-            $title = $site_data['title'];
-        } elseif (isset($this->site_alias) && $this->site_alias[0] != '_') {
-            $this->site_title = ucwords(str_replace('_', ' ', $this->site_alias));
+        if (!empty($type)) {
+            $this->type = $type;
         }
 
-
-        if ($title !== false) {
+        if (!empty($title)) {
             $this->title = $title;
         } elseif (isset($this->alias) && $this->alias[0] != '_') {
             $this->title = ucwords(str_replace('_', ' ', $this->alias));
@@ -97,68 +75,47 @@ class PageBuilder
             if (strpos($url, '.') !== false) {
                 $url = substr($url, 0, strpos($url, '.'));
             }
-            while ($url[0] == '/') {
+            while (strlen($url) && $url[0] == '/') {
                 $url = substr($url, 1);
             }
-            while ($url[strlen($url) - 1] == '/') {
+            while (strlen($url) && $url[strlen($url) - 1] == '/') {
                 $url = substr($url, 0, strlen($url) - 1);
             }
             $this->title = ucwords(str_replace(['/', '_'], [' - ', ' '], parse_url($url, PHP_URL_PATH)));
         }
 
-
-        if (!$this->alias) {
+        if (empty($this->alias) && !empty($this->title)) {
             $this->alias = str_replace([' - ',' '], '_', strtolower($this->title));
         }
 
-        //echo 'DEBUG site_title: '.$this->site_title.' title: '.$this->title.' and alias: '.$alias."<br/>\n";
-
-        if (isset($this->site_title) && $this->site_title && isset($this->title) && $this->title) {
-            $this->title = $this->site_title . ' - ' . $this->title;
-        } elseif ((!isset($this->title) || !$this->title) && isset($this->site_title) && $this->site_title) {
-            $this->title = $this->site_title;
+        if (empty(static::$site_title) && !empty(static::$site_alias) && static::$site_alias[0] != '_') {
+            static::$site_title = ucwords(str_replace('_', ' ', static::$site_alias));
         }
 
-        if ($replacements && is_array($replacements)) {
-            $this->replacements = $replacements;
+        // Prepend the site title?
+        if (!empty(static::$site_title) && !empty($this->title)) {
+            $this->title = static::$site_title . ' - ' . $this->title;
         }
 
-        $this->scripts = false;
-        $this->stylesheets = $site_stylesheets;
-        $this->templates = [];
-        if ($type) {
-            $this->setType($type);
-        } else {
-            $this->type = false;
+        // Page title is STILL empty?? Then just use the site title if we have that
+        if (empty($this->title) && !empty(static::$site_title)) {
+            $this->title = static::$site_title;
         }
 
-        if (
-            !empty($site_data) &&
-            (
-                !empty($site_data['stylesheets'])
-                ||
-                !empty($site_data['stylesheet'])
-            )
-        ) {
-            if (!empty($site_data['stylesheets'])) {
-                if (is_array($site_data['stylesheets'])) {
-                    $this->stylesheets = array_merge($this->stylesheets, $site_data['stylesheets']);
-                } else {
-                    $this->stylesheets[] = ['href' => $site_data['stylesheets']];
-                }
-            }
-            if (!empty($site_data['stylesheet'])) {
-                $this->stylesheets[] = ['href' => $site_data['stylesheet']];
+        if (empty(static::$site_icon)) {
+            if (is_file(($_SERVER['DOCUMENT_ROOT'] ?? '') . '/favicon.ico')) {
+                static::$site_icon = '/favicon.ico';
             }
         }
 
-        // TODO Possibly needs fix??
-        //if(!$this->stylesheets)
-        //{
-            $document_root_path = $_SERVER['DOCUMENT_ROOT'];
-            $attempt_to_add_css = ['/css/global.css', '/css/primary.css'];
-        if (isset($this->site_alias) && $this->site_alias) {
-            $attempt_to_add_css[] = '/css/' . $this->site_alias . '.css';
+        $this->stylesheets = null;
+        if (!empty(static::$site_stylesheets)) {
+            $this->stylesheets = static::$site_stylesheets;
+        }
+        $document_root_path = $_SERVER['DOCUMENT_ROOT'] ?? '';
+        $attempt_to_add_css = ['/css/global.css', '/css/primary.css'];
+        if (isset(static::$site_alias) && static::$site_alias) {
+            $attempt_to_add_css[] = '/css/' . static::$site_alias . '.css';
         }
         if (isset($this->type) && $this->type) {
             $attempt_to_add_css[] = '/css/' . $this->type . '.css';
@@ -172,31 +129,50 @@ class PageBuilder
                 $this->stylesheets[] = ['href' => $ac];
             }
         }
-            //}
 
-            $this->header_content = false;
-            $this->footer_content = false;
-            $this->body_content = false;
+        $this->scripts = null;
+        $this->templates = [];
+        if ($type) {
+            $this->setType($type);
+        } else {
+            $this->type = false;
+        }
+
+        $this->header_content = null;
+        $this->footer_content = null;
+        $this->body_content = null;
     }
 
-    private function setSiteAlias($site_alias = false)
+    public static function setSiteVariable(string $name, string|array $value) : bool
     {
-
-        if ($site_alias) {
-            $this->site_alias = $site_alias;
+        if (!str_starts_with($name, 'site_')) {
+            $name = 'site_' . $name;
+        }
+        if (property_exists(static::class, $name)) {
+            static::${$name} = $value;
+            return true;
         } else {
-            $this->site_alias =
+            return false;
+        }
+    }
+
+    private function setSiteAlias(string|null $site_alias = null) : string
+    {
+        if (!empty($site_alias)) {
+            static::$site_alias = $site_alias;
+        } else {
+            static::$site_alias =
                 str_replace('www.', '', substr($_SERVER['HTTP_HOST'], 0, strrpos($_SERVER['HTTP_HOST'], '.')));
         }
 
-        return $this->site_alias;
+        return static::$site_alias;
     }
 
-    public function setType($type)
+    public function setType(string $type)
     {
         $this->type = $type;
 
-        // if the type css is not present, add it
+        // If the type css is not present, add it
         if (!$this->hasStylesheet('/css/' . $this->type . '.css')) {
             if (!is_array($this->stylesheets)) {
                 $this->stylesheets = [];
@@ -205,19 +181,19 @@ class PageBuilder
         }
     }
 
-    public function setTitle($title)
+    public function setTitle(string $title)
     {
         $this->title = $title;
     }
 
-    public function setDescription($description)
+    public function setDescription(string $description)
     {
         $this->description = $description;
     }
 
-    public function hasStylesheet($href)
+    public function hasStylesheet(string $href)
     {
-        if (!isset($this->stylesheets) || !is_array($this->stylesheets) || !count($this->stylesheets)) {
+        if (empty($this->stylesheets) || !is_array($this->stylesheets) || !count($this->stylesheets)) {
             return false;
         }
         foreach ($this->stylesheets as $stylesheet) {
@@ -229,60 +205,55 @@ class PageBuilder
         return false;
     }
 
-    public function useSmartIndentation($setting = true)
+    public function useSmartIndentation(bool $setting = true)
     {
         return $this->cb->useSmartIndentation($setting);
     }
 
-
-    private function getMetas($alias = false, $description = false, $keywords = false, $content_type = false)
+    private function getMetas(string|null $alias = null, string|null $description = null, array|string|null $keywords = null, string|null $content_type = null)
     {
-
-        global $site_keywords;
-        global $site_description;
-
-        if (!$alias) {
+        if (empty($alias)) {
             $alias = $this->getAlias();
         }
-        if (!$description && isset($this->description)) {
+        if (empty($description) && !empty($this->description)) {
             $description = $this->description;
         }
-        if (!$description && isset($site_description)) {
-            $description = $site_description;
+        if (empty($description) && !empty(static::$site_description)) {
+            $description = static::$site_description;
         }
 
-        if (!$keywords) {
-            if (isset($this->keywords)) {
+        if (empty($keywords)) {
+            if (!empty($this->keywords)) {
                 $keywords = $this->keywords;
             }
         }
 
-        if (isset($site_keywords)) {
+        if (!empty(static::$site_keywords)) {
             if (is_array($keywords)) {
-                $keywords = array_merge($keywords, $site_keywords);
+                $keywords = array_merge($keywords, static::$site_keywords);
             } else {
-                $keywords = $site_keywords;
+                $keywords = static::$site_keywords;
             }
         }
 
-        if (!$content_type) {
+        if (empty($content_type)) {
             $content_type = $this->getContentType();
         }
 
-        if (isset($this->metas) && count($this->metas)) {
+        if (!empty($this->metas) && count($this->metas)) {
             $metas = $this->metas;
         } else {
             $metas = [];
         }
-        if ($content_type) {
+        if (!empty($content_type)) {
             $metas[] = ['attribute' => 'http-equiv', 'attribute_value' => 'content-type', 'content' => $content_type];
         }
 
-        if ($description) {
+        if (!empty($description)) {
             $metas[] = ['attribute' => 'name', 'attribute_value' => 'description', 'content' => $description];
         }
 
-        if ($keywords) {
+        if (!empty($keywords)) {
             if (is_array($keywords)) {
                 $keywords_string = implode(', ', $keywords);
             } else {
@@ -300,45 +271,12 @@ class PageBuilder
         $this->metas[] = $meta;
     }
 
-    public function getHeadExtra($alias = false)
+    public function getHeadExtra()
     {
-
-        if (!$alias) {
-            $alias = $this->getAlias();
-        }
-
-        // TODO? Head extra for certain aliases?
-
-        $head_extra = '';
-        if (isset($this->head_extra)) {
-            $head_extra = $this->head_extra;
-        }
-
-        return $head_extra;
+        return $this->head_extra;
     }
 
-    public function setIcon($icon)
-    {
-        $this->icon = $icon;
-    }
-
-    public function getIcon()
-    {
-        global $site_data;
-
-        if ($this->icon) {
-            return $this->icon;
-        } elseif (!empty($site_data) && !empty($site_data['icon'])) {
-            $this->icon = $site_data['icon'];
-        } elseif (is_file($_SERVER['DOCUMENT_ROOT'] . '/favicon.ico')) {
-            $this->icon = '/favicon.ico';
-            return $this->icon;
-        } else {
-            return false;
-        }
-    }
-
-    public function setKeywords($keywords)
+    public function setKeywords(array|string $keywords)
     {
         $this->keywords = $keywords;
     }
@@ -355,7 +293,6 @@ class PageBuilder
 
     public function getDefaultReplacements()
     {
-
         return
         [
             'alias' => $this->getAlias(),
@@ -395,15 +332,11 @@ class PageBuilder
         }
     }
 
-    public function addScripts($scripts)
+    public function addScripts(array|string $scripts)
     {
-        if (!is_array($this->scripts)) {
-            $this->scripts = [];
-        }
-
-        if (!is_array($scripts) && is_string($scripts)) {
-            return $this->addScript($scripts);
-        } else {
+        if (is_string($scripts)) {
+            $this->addScript($scripts);
+        } elseif (is_array($scripts)) {
             foreach ($scripts as $s) {
                 if (!is_array($s) && is_string($s)) {
                     $this->scripts[] = ['src' => $s, 'type' => 'text/javascript'];
@@ -443,15 +376,15 @@ class PageBuilder
         return $result;
     }
 
-    public function addScript($src, $type = 'text/javascript')
+    public function addScript(string|array $src, string $type = 'text/javascript')
     {
         if (!is_array($this->scripts)) {
             $this->scripts = [];
         }
 
-        if (!is_array($src) && is_string($src)) {
+        if (is_string($src)) {
             $this->scripts[] = ['src' => $src, 'type' => $type];
-        } else {
+        } elseif (is_array($src)) {
             $this->scripts[] = $src;
         }
     }
@@ -509,12 +442,12 @@ class PageBuilder
         return $content_type;
     }
 
-    public function getDTDContent($alias = false, $doctype_alias = false)
+    public function getDTDContent(string|null $alias = null, string|null $doctype_alias = null)
     {
-        if (!$alias) {
+        if (empty($alias)) {
             $alias = $this->getAlias();
         }
-        if (!$doctype_alias) {
+        if (empty($doctype_alias)) {
             $doctype_alias = $this->getDoctypeAlias();
         }
 
@@ -597,16 +530,13 @@ class PageBuilder
 
     public function getScripts($scripts = false)
     {
-
-        global $site_scripts;
-
         if (isset($this->scripts) && is_array($this->scripts) && count($this->scripts)) {
             $scripts = $this->scripts;
         }
 
         // Place the site scripts in first
-        if (isset($site_scripts) && is_array($site_scripts) && count($site_scripts)) {
-            $scripts = array_merge($site_scripts, (is_array($scripts) ? $scripts : []));
+        if (!empty(static::$site_scripts) && is_array(static::$site_scripts) && count(static::$site_scripts)) {
+            $scripts = array_merge(static::$site_scripts, (is_array($scripts) ? $scripts : []));
         }
 
         if (is_array($scripts)) {
@@ -617,8 +547,7 @@ class PageBuilder
                     $script = [];
                     $script['src'] = $script_src;
                     $script['type'] = 'text/javascript';
-                } else // is array
-                {
+                } else {
                     if (!isset($script['type']) || !$script['type']) {
                         $script['type'] = 'text/javascript';
                     }
@@ -629,6 +558,16 @@ class PageBuilder
         return $scripts;
     }
 
+    public function setIcon(string $icon)
+    {
+        $this->icon = $icon;
+    }
+
+    public function getIcon(): string|false
+    {
+        return $this->icon ?? static::$site_icon ?? false;
+    }
+
     public function getHeadContent(
         $alias = false,
         $stylesheets = false,
@@ -637,8 +576,6 @@ class PageBuilder
         $metas = false,
         $head_extra = false
     ) {
-        global $site_head_extra;
-
         if (!$alias) {
             $alias = $this->getAlias();
         }
@@ -660,12 +597,11 @@ class PageBuilder
         }
 
         if (isset($this->head_extra)) {
-            $head_extra .= $this->getHeadExtra($alias);
+            $head_extra .= $this->getHeadExtra();
         }
-        if (!empty($site_data) && !empty($site_data['head_extra'])) {
-            $head_extra .= $site_data['head_extra'];
-        } elseif (isset($site_head_extra)) {
-            $head_extra .= $site_head_extra; // check site global
+
+        if (!empty(static::$site_head_extra)) {
+            $head_extra .= static::$site_head_extra;
         }
 
         $template = ContentBuilder::$template_directory . '/head.' . ContentBuilder::$template_extension;
@@ -679,9 +615,7 @@ class PageBuilder
             $replacements['title'] = $title;
         }
 
-
-        $icon = $this->getIcon();
-        if ($icon) {
+        if ($icon = $this->getIcon()) {
             $replacements['icon'] = $icon;
         }
 
@@ -701,33 +635,30 @@ class PageBuilder
         return $this->cb->getContent($template, $replacements);
     }
 
-    public function hasType()
+    public function hasType() : bool
     {
         if (!empty($this->type)) {
-            return $this->type;
+            return true;
         } else {
             return false;
         }
     }
 
-    public function getHeaderContent($alias = false, $template = false)
+    public function getHeaderContent(string|null $alias = null, string|null $template = null) : string
     {
-
-        global $site_path;
-
-        if (!isset($site_path)) {
-            $site_path = ContentBuilder::getSitePath();
+        if (empty(static::$site_path)) {
+            static::$site_path = ContentBuilder::getSitePath();
         }
 
-        if ($this->header_content) {
+        if (!empty($this->header_content)) {
             return $this->header_content;
         }
 
-        if (!$alias) {
+        if (empty($alias)) {
             $alias = $this->getAlias();
         }
-        if (!$template) {
-            $template = $site_path . ContentBuilder::$template_directory . '/'
+        if (empty($template)) {
+            $template = static::$site_path . ContentBuilder::$template_directory . '/'
                 . ($this->hasType() ? $this->type . '_' : '') . 'header.' . ContentBuilder::$template_extension;
         }
 
@@ -739,27 +670,24 @@ class PageBuilder
             $this->header_content = $this->cb->getContent();
         }
 
-        return $this->header_content;
+        return $this->header_content ?? '';
     }
 
-    public function getFooterContent($alias = false, $template = false)
+    public function getFooterContent(string|null $alias = null, string|null $template = null) : string
     {
-
-        global $site_path;
-
-        if (!isset($site_path)) {
-            $site_path = ContentBuilder::getSitePath();
+        if (empty(static::$site_path)) {
+            static::$site_path = ContentBuilder::getSitePath();
         }
 
         if (!empty($this->footer_content)) {
             return $this->footer_content;
         }
 
-        if (!$alias) {
+        if (empty($alias)) {
             $alias = $this->getAlias();
         }
-        if (!$template) {
-            $template = $site_path . ContentBuilder::$template_directory . '/'
+        if (empty($template)) {
+            $template = static::$site_path . ContentBuilder::$template_directory . '/'
                 . ($this->hasType() ? $this->type . '_' : '') . 'footer.' . ContentBuilder::$template_extension;
         }
 
@@ -772,23 +700,23 @@ class PageBuilder
             $this->footer_content = $this->cb->getContent();
         }
 
-        return $this->footer_content;
+        return $this->footer_content ?? '';
     }
 
-    public function getBodyContent($alias = false, $attributes = '')
+    public function getBodyContent(string|null $alias = null, string $attributes = '') : string
     {
 
-        if (!$alias) {
+        if (empty($alias)) {
             $alias = $this->getAlias();
         }
 
-        if ($this->body_content) {
+        if (!empty($this->body_content)) {
             return $this->body_content;
         }
 
         $replacements = $this->getReplacements();
 
-        if (isset($this->body_attributes)) {
+        if (!empty($this->body_attributes)) {
             $attributes .= $this->body_attributes;
         }
 
@@ -813,22 +741,19 @@ class PageBuilder
 
         $this->body_content = $this->cb->getContent();
 
-        return $this->body_content;
+        return $this->body_content ?? '';
     }
 
-    public function getPageContent($alias = false, $attributes = '')
+    public function getPageContent(string|null $alias = null, string $attributes = '') : string
     {
-        if (!$alias) {
+        if (empty($alias)) {
             $alias = $this->getAlias();
         }
-        if (!$this->doctype_alias) {
+        if (empty($this->doctype_alias)) {
             $this->doctype_alias = $this->getDoctypeAlias();
         }
 
-        //$page_inside_content = $this->getHeadContent($alias).$this->getBodyContent($alias);
-
-        $replacements =
-        [
+        $replacements = [
             'dtd' => $this->getDTDContent($alias),
             'attributes' => '',
             'head' => $this->getHeadContent($alias),
@@ -846,25 +771,20 @@ class PageBuilder
 
         $content = $this->cb->getContent();
 
-        return $content;
+        return $content ?? '';
     }
 
-    public function getHTMLContent($alias = false, $attributes = '')
+    public function getHTMLContent(string|null $alias = null, string $attributes = '') : string
     {
-        return $this->getPageContent($alias, $attributes);
+        return $this->getPageContent($alias, $attributes) ?? '';
     }
 
-    public function getDomain()
+    public function getDomain() : string
     {
-        if ($this->domain) {
-            return $this->domain;
+        if (empty($this->domain)) {
+            $this->domain = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
         }
-
-        if ((isset($_SERVER['HTTP_HOST'])) && ($_SERVER['HTTP_HOST'] != '')) {
-            $domain = $_SERVER['HTTP_HOST'];
-        } else {
-            $domain = $_SERVER['SERVER_NAME'];
-        }
+        return $this->domain ?? '';
     }
 
     public function getAlias()
@@ -885,10 +805,9 @@ class PageBuilder
         return $alias;
     }
 
-    public function getContent($alias = false)
+    public function getContent(string|null $alias = null) : string
     {
-
-        if (!$alias) {
+        if (empty($alias)) {
             $alias = $this->getAlias();
         }
 
@@ -905,30 +824,30 @@ class PageBuilder
         return $content;
     }
 
-    public function render($alias = false)
+    public function render(string|null $alias = null)
     {
-
-        if (!$alias) {
+        if (empty($alias)) {
             $alias = $this->getAlias();
         }
         echo $this->getContent($alias);
     }
 
-    public static function getAliasUsingURL($url = false)
+    public static function getAliasUsingURL(string|null $url = null) : string
     {
-        if (!$url) {
-            $url = $_SERVER['SCRIPT_NAME'] ? $_SERVER['SCRIPT_NAME'] : $_SERVER['PHP_SELF'];
-            if (!$url) {
+        if (empty($url)) {
+            $url = $_SERVER['SCRIPT_NAME'] ?? $_SERVER['PHP_SELF'] ?? null;
+            if (empty($url) && !empty($_SERVER['REQUEST_URI'])) {
                 $uri_parts = parse_url($_SERVER['REQUEST_URI']);
-                $url = $uri_parts['path'];
+                $url = $uri_parts['path'] ?? null;
             }
         }
-        $alias = str_replace('index.php', '', $url);
+
+        $alias = str_replace('index.php', '', (string) $url);
         // Remove first /
         while (substr($alias, 0, 1) == '/') {
             $alias = substr($alias, 1);
         }
-        // Remove lasst /
+        // Remove last /
         while (substr($alias, strlen($alias) - 1, 1) == '/') {
             $alias = substr($alias, 0, strlen($alias) - 1);
         }
