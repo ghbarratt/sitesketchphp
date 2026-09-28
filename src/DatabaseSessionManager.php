@@ -9,16 +9,16 @@ use PDOException;
 class DatabaseSessionManager
 {
     private static $dbh;
-    private static $session_code;
-    private static $sync_real_session;
+    private static $sessionCode;
+    private static $syncRealSession;
     private static $data;
     private static $errors = [];
-    private static $table_name = 'session';
+    private static $tableName = 'session';
 
 
-    public function __construct($dbh, $session_code = false, $sync_real_session = true)
+    public function __construct($dbh, $sessionCode = false, $syncRealSession = true)
     {
-        self::$sync_real_session = $sync_real_session;
+        self::$syncRealSession = $syncRealSession;
 
         if (!isset(self::$dbh) || !is_object(self::$dbh)) {
             if (isset($dbh)) {
@@ -29,21 +29,21 @@ class DatabaseSessionManager
             }
         }
 
-        if (self::$sync_real_session) {
+        if (self::$syncRealSession) {
             $result = session_start();
         } else {
             $result = true;
         }
 
-        if ($session_code) {
-            self::setSessionCode($session_code);
-        } elseif (!self::$session_code && self::$sync_real_session) {
-            self::$session_code = session_id();
-        } elseif (!self::$session_code && isset($_COOKIE['PHPSESSID'])) {
-            self::$session_code = $_COOKIE['PHPSESSID'];
+        if ($sessionCode) {
+            self::setSessionCode($sessionCode);
+        } elseif (!self::$sessionCode && self::$syncRealSession) {
+            self::$sessionCode = session_id();
+        } elseif (!self::$sessionCode && isset($_COOKIE['PHPSESSID'])) {
+            self::$sessionCode = $_COOKIE['PHPSESSID'];
         }
 
-        if (!self::$session_code) {
+        if (!self::$sessionCode) {
             self::$errors[] = 'Unable to get session code (PHPSESSID) from browser (cookies). Are cookies turned off?';
             return false;
         }
@@ -51,17 +51,17 @@ class DatabaseSessionManager
         return $result;
     }
 
-    public static function getSessionCode($session_id = null, $dbh_in = null)
+    public static function getSessionCode($sessionId = null, $dbhIn = null)
     {
-        if (!$dbh_in) {
+        if (!$dbhIn) {
             if (isset(self::$dbh)) {
-                $dbh_in = self::$dbh;
+                $dbhIn = self::$dbh;
             }
         }
-        if (!empty($session_id) && is_numeric($session_id)) {
-            $sql = "SELECT code FROM " . self::$table_name . " WHERE id = " . (int)$session_id;
+        if (!empty($sessionId) && is_numeric($sessionId)) {
+            $sql = "SELECT code FROM " . self::$tableName . " WHERE id = " . (int)$sessionId;
             try {
-                $sth = $dbh_in->prepare($sql);
+                $sth = $dbhIn->prepare($sql);
                 $sth->execute();
                 $result = $sth->fetch();
                 return $result['code'];
@@ -70,50 +70,50 @@ class DatabaseSessionManager
                 return false;
             }
         } else {
-            return self::$session_code;
+            return self::$sessionCode;
         }
     }
 
-    public static function setSessionCode($session_code = false)
+    public static function setSessionCode($sessionCode = false)
     {
-        if (self::$sync_real_session) {
-            if (!$session_code) {
+        if (self::$syncRealSession) {
+            if (!$sessionCode) {
                 $result = session_regenerate_id(true);
                 if ($result) {
-                    $session_code = session_id();
+                    $sessionCode = session_id();
                 }
                 $result = true;
             } else {
-                $result = session_id($session_code);
+                $result = session_id($sessionCode);
             }
         } else {
             $result = true;
         }
 
-        setcookie('PHPSESSID', $session_code, 0, '/'); // important to set path to /
-        self::$session_code = $session_code;
+        setcookie('PHPSESSID', $sessionCode, 0, '/'); // important to set path to /
+        self::$sessionCode = $sessionCode;
 
         return $result;
     }
 
-    public static function sessionExistsWithCode($session_code = false, $dbh_in = false)
+    public static function sessionExistsWithCode($sessionCode = false, $dbhIn = false)
     {
-        if (!$dbh_in) {
+        if (!$dbhIn) {
             if (isset(self::$dbh)) {
-                $dbh_in = self::$dbh;
+                $dbhIn = self::$dbh;
             }
         }
 
-        if (!$session_code && isset(self::$session_code) && self::$session_code) {
-            $session_code = self::$session_code;
+        if (!$sessionCode && isset(self::$sessionCode) && self::$sessionCode) {
+            $sessionCode = self::$sessionCode;
         }
 
         $sql =
         "	
-			SELECT code FROM " . self::$table_name . " WHERE code = '" . $session_code . "'
+			SELECT code FROM " . self::$tableName . " WHERE code = '" . $sessionCode . "'
 		";
         try {
-            $sth = $dbh_in->prepare($sql);
+            $sth = $dbhIn->prepare($sql);
             $sth->execute();
             $result = $sth->fetch();
             return $result['code'];
@@ -128,13 +128,13 @@ class DatabaseSessionManager
         self::$data = self::getData(false, true);
     }
 
-    public function getData($session_code = false, $force_query = false)
+    public function getData($sessionCode = false, $forceQuery = false)
     {
-        if (!$session_code && self::$session_code) {
-            $session_code = self::$session_code;
+        if (!$sessionCode && self::$sessionCode) {
+            $sessionCode = self::$sessionCode;
         }
         if (
-            !$force_query && $session_code == self::$session_code
+            !$forceQuery && $sessionCode == self::$sessionCode
             && isset(self::$data)
             && is_array(self::$data)
             && count(self::$data)
@@ -145,23 +145,23 @@ class DatabaseSessionManager
         $sql =
         "	
 			SELECT data
-			FROM " . self::$table_name . "
-			WHERE code = '" . $session_code . "'
+			FROM " . self::$tableName . "
+			WHERE code = '" . $sessionCode . "'
 		";
 
         try {
             $sth = self::$dbh->prepare($sql);
             $sth->execute();
             $result = $sth->fetch();
-            $data_string = $result['data'];
+            $dataString = $result['data'];
         } catch (PDOException $e) {
             self::$errors[] = $e->getMessage();
             return false;
         }
 
-        $data = unserialize($data_string);
+        $data = unserialize($dataString);
 
-        if (self::$sync_real_session) {
+        if (self::$syncRealSession) {
             if (is_array($data)) {
                 $data = array_merge($_SESSION, $data);
             } else {
@@ -169,17 +169,17 @@ class DatabaseSessionManager
             }
         }
 
-        if ($session_code == self::$session_code) {
+        if ($sessionCode == self::$sessionCode) {
             self::$data = $data;
         }
-        $data['session_code'] = $session_code;
+        $data['session_code'] = $sessionCode;
 
         return $data;
     }
 
     public function get($key)
     {
-        if ((!isset(self::$data) || !is_array(self::$data)) && isset(self::$session_code)) {
+        if ((!isset(self::$data) || !is_array(self::$data)) && isset(self::$sessionCode)) {
             self::$data = self::getData();
         }
 
@@ -190,38 +190,38 @@ class DatabaseSessionManager
         return false;
     }
 
-    public function remove($key, $write_to_database = true)
+    public function remove($key, $writeToDatabase = true)
     {
         unset(self::$data[$key]);
 
-        $sql = 'SELECT id FROM ' . self::$table_name . " WHERE code = " . self::$dbh->quote(self::$session_code);
+        $sql = 'SELECT id FROM ' . self::$tableName . " WHERE code = " . self::$dbh->quote(self::$sessionCode);
         try {
             $sth = self::$dbh->prepare($sql);
             $sth->execute();
             $result = $sth->fetch();
-            $session_id = $result['id'];
+            $sessionId = $result['id'];
         } catch (PDOException $e) {
             self::$errors[] = $e->getMessage();
             return false;
         }
 
 
-        $last_ip = $_SERVER['REMOTE_ADDR'];
+        $lastIp = $_SERVER['REMOTE_ADDR'];
 
-        if (self::$sync_real_session) {
+        if (self::$syncRealSession) {
             unset($_SESSION[$key]);
         }
 
-        if ($write_to_database) {
-            if ($session_id) {
+        if ($writeToDatabase) {
+            if ($sessionId) {
                 $sql =
                 "
-					UPDATE " . self::$table_name . "
+					UPDATE " . self::$tableName . "
 					SET 
 						data = " . self::$dbh->quote(serialize(self::$data)) . ",
 						updated = NOW(),
-						last_ip = " . self::$dbh->quote($last_ip) . "
-					WHERE id = " . self::$dbh->quote($session_id) . "
+						last_ip = " . self::$dbh->quote($lastIp) . "
+					WHERE id = " . self::$dbh->quote($sessionId) . "
 				";
                 try {
                     $sth = self::$dbh->prepare($sql);
@@ -236,29 +236,29 @@ class DatabaseSessionManager
         return false;
     }
 
-    public function deleteSessionFromDatabase($session_id, $dbh_in = null)
+    public function deleteSessionFromDatabase($sessionId, $dbhIn = null)
     {
-        if (!$dbh_in) {
+        if (!$dbhIn) {
             if (isset(self::$dbh)) {
-                $dbh_in = self::$dbh;
+                $dbhIn = self::$dbh;
             }
         }
 
-        $sql = 'SELECT id FROM ' . self::$table_name . ' WHERE id = ' . (int)$session_id;
+        $sql = 'SELECT id FROM ' . self::$tableName . ' WHERE id = ' . (int)$sessionId;
         try {
-            $sth = $dbh_in->prepare($sql);
+            $sth = $dbhIn->prepare($sql);
             $sth->execute();
             $result = $sth->fetch();
-            $found_id = $result['id'];
+            $foundId = $result['id'];
         } catch (PDOException $e) {
             self::$errors[] = $e->getMessage();
             return false;
         }
 
-        if ($session_id == $found_id) {
-            $sql = 'DELETE FROM ' . self::$table_name . ' WHERE id = ' . (int)$session_id;
+        if ($sessionId == $foundId) {
+            $sql = 'DELETE FROM ' . self::$tableName . ' WHERE id = ' . (int)$sessionId;
             try {
-                $sth = $dbh_in->prepare($sql);
+                $sth = $dbhIn->prepare($sql);
                 $sth->execute();
             } catch (PDOException $e) {
                 self::$errors[] = $e->getMessage() . ' - SQL: ' . $sql;
@@ -269,47 +269,47 @@ class DatabaseSessionManager
         return false;
     }
 
-    public function set($key, $value, $write_to_database = true)
+    public function set($key, $value, $writeToDatabase = true)
     {
 
         self::$data[$key] = $value;
 
-        $sql = 'SELECT id FROM ' . self::$table_name . " WHERE code = " . self::$dbh->quote(self::$session_code);
+        $sql = 'SELECT id FROM ' . self::$tableName . " WHERE code = " . self::$dbh->quote(self::$sessionCode);
 
         try {
             $sth = self::$dbh->prepare($sql);
             $sth->execute();
             $result = $sth->fetch();
-            $session_id = $result['id'];
+            $sessionId = $result['id'];
         } catch (PDOException $e) {
             self::$errors[] = $e->getMessage();
             return false;
         }
 
-        $last_ip = $_SERVER['REMOTE_ADDR'];
+        $lastIp = $_SERVER['REMOTE_ADDR'];
 
-        if (self::$sync_real_session) {
+        if (self::$syncRealSession) {
             $_SESSION[$key] = $value;
         }
 
-        if ($write_to_database) {
-            if ($session_id) {
+        if ($writeToDatabase) {
+            if ($sessionId) {
                 $sql =
                 "
-					UPDATE " . self::$table_name . "
+					UPDATE " . self::$tableName . "
 					SET 
 						data = " . self::$dbh->quote(serialize(self::$data)) . ",
 						updated = NOW(),
-						last_ip = " . self::$dbh->quote($last_ip) . "
-					WHERE id = " . self::$dbh->quote($session_id) . "
+						last_ip = " . self::$dbh->quote($lastIp) . "
+					WHERE id = " . self::$dbh->quote($sessionId) . "
 				";
             } else {
                 // no match
-                $sql = 'INSERT INTO ' . self::$table_name . '
+                $sql = 'INSERT INTO ' . self::$tableName . '
 					(code, data, last_ip, created)
 					VALUES
-					(' . self::$dbh->quote(self::$session_code) . ', ' . self::$dbh->quote(serialize(self::$data))
-                    . ', ' . self::$dbh->quote($last_ip) . ', NOW())';
+					(' . self::$dbh->quote(self::$sessionCode) . ', ' . self::$dbh->quote(serialize(self::$data))
+                    . ', ' . self::$dbh->quote($lastIp) . ', NOW())';
             }
 
             try {
