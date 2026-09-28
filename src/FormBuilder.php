@@ -8,14 +8,14 @@ class FormBuilder extends ContentBuilder
 {
     protected static $debugging = false;
 
-    protected $require_processing_for_render = true;
-    protected $should_build_fields = true;
+    protected $requireProcessingForRender = true;
+    protected $shouldBuildFields = true;
     protected $data;
     protected $processed = false;
-    protected $fields_built = false;
-    protected $fields_content;
+    protected $fieldsBuilt = false;
+    protected $fieldsContent;
     protected $validates;
-    protected $validation_attempted = false;
+    protected $validationAttempted = false;
     protected $redirects;
 
     public $messages;
@@ -40,7 +40,7 @@ class FormBuilder extends ContentBuilder
         }
 
         // If validation not attempted, validate
-        if (!$this->validation_attempted) {
+        if (!$this->validationAttempted) {
             if (isset($_REQUEST) && count($_REQUEST)) {
                 $this->data = array_merge($this->data, $_REQUEST);
             }
@@ -64,7 +64,7 @@ class FormBuilder extends ContentBuilder
             }
         }
 
-        if ($this->validation_attempted) {
+        if ($this->validationAttempted) {
             if ($this->validates && isset($redirects['validates'])) {
                 header('Location: ' . $redirects['validates']);
                 exit();
@@ -85,9 +85,9 @@ class FormBuilder extends ContentBuilder
         $this->data = $data;
     }
 
-    public function addData($additional_data)
+    public function addData($additionalData)
     {
-        $this->data = array_merge($this->data, $additional_data);
+        $this->data = array_merge($this->data, $additionalData);
     }
 
     protected function buildFields($fields = false)
@@ -100,32 +100,32 @@ class FormBuilder extends ContentBuilder
             }
         }
 
-        $this->fields_built = true;
+        $this->fieldsBuilt = true;
     }
 
-    public function setShouldBuildFields($should_build_fields)
+    public function setShouldBuildFields($shouldBuildFields)
     {
-        $this->should_build_fields = $should_build_fields;
+        $this->shouldBuildFields = $shouldBuildFields;
     }
 
-    public function getContent($template = false, $additional_replacements = false)
+    public function getContent($template = false, $additionalReplacements = false)
     {
 
         if (!$template) {
             $template = $this->template;
         }
 
-        if ($this->require_processing_for_render && !$this->processed) {
+        if ($this->requireProcessingForRender && !$this->processed) {
             $this->process();
         }
 
-        if ($this->should_build_fields && !$this->fields_built) {
+        if ($this->shouldBuildFields && !$this->fieldsBuilt) {
             $this->buildFields();
         }
 
         $replacements = $this->getData();
-        if (is_array($additional_replacements)) {
-            $replacements = array_merge($replacements, $additional_replacements);
+        if (is_array($additionalReplacements)) {
+            $replacements = array_merge($replacements, $additionalReplacements);
         }
 
         $content = parent::getContent($template, $replacements);
