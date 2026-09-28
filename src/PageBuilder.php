@@ -43,8 +43,12 @@ class PageBuilder
     protected $errors = [];
 
 
-    public function __construct(string|null $alias = null, array|null $replacements = null, string|null $type = null, string|null $title = null)
-    {
+    public function __construct(
+        string|null $alias = null,
+        array|null $replacements = null,
+        string|null $type = null,
+        string|null $title = null
+    ) {
         $this->cb = new ContentBuilder();
         if (empty($title) && !empty($alias)) {
             $title = ucwords(str_replace('_', ' ', $alias));
@@ -52,8 +56,12 @@ class PageBuilder
         $this->reset($alias, $replacements, $type, $title);
     }
 
-    public function reset(string|null $alias = null, array|null $replacements = null, string|null $type = null, string|null $title = null)
-    {
+    public function reset(
+        string|null $alias = null,
+        array|null $replacements = null,
+        string|null $type = null,
+        string|null $title = null
+    ) {
         if (!empty($alias)) {
             $this->alias = $alias;
         }
@@ -143,7 +151,7 @@ class PageBuilder
         $this->body_content = null;
     }
 
-    public static function setSiteVariable(string $name, string|array $value) : bool
+    public static function setSiteVariable(string $name, string|array $value): bool
     {
         if (!str_starts_with($name, 'site_')) {
             $name = 'site_' . $name;
@@ -156,7 +164,7 @@ class PageBuilder
         }
     }
 
-    private function setSiteAlias(string|null $site_alias = null) : string
+    private function setSiteAlias(string|null $site_alias = null): string
     {
         if (!empty($site_alias)) {
             static::$site_alias = $site_alias;
@@ -210,8 +218,12 @@ class PageBuilder
         return $this->cb->useSmartIndentation($setting);
     }
 
-    private function getMetas(string|null $alias = null, string|null $description = null, array|string|null $keywords = null, string|null $content_type = null)
-    {
+    private function getMetas(
+        string|null $alias = null,
+        string|null $description = null,
+        array|string|null $keywords = null,
+        string|null $content_type = null
+    ) {
         if (empty($alias)) {
             $alias = $this->getAlias();
         }
@@ -635,7 +647,7 @@ class PageBuilder
         return $this->cb->getContent($template, $replacements);
     }
 
-    public function hasType() : bool
+    public function hasType(): bool
     {
         if (!empty($this->type)) {
             return true;
@@ -644,7 +656,7 @@ class PageBuilder
         }
     }
 
-    public function getHeaderContent(string|null $alias = null, string|null $template = null) : string
+    public function getHeaderContent(string|null $alias = null, string|null $template = null): string
     {
         if (empty(static::$site_path)) {
             static::$site_path = ContentBuilder::getSitePath();
@@ -673,7 +685,7 @@ class PageBuilder
         return $this->header_content ?? '';
     }
 
-    public function getFooterContent(string|null $alias = null, string|null $template = null) : string
+    public function getFooterContent(string|null $alias = null, string|null $template = null): string
     {
         if (empty(static::$site_path)) {
             static::$site_path = ContentBuilder::getSitePath();
@@ -703,7 +715,7 @@ class PageBuilder
         return $this->footer_content ?? '';
     }
 
-    public function getBodyContent(string|null $alias = null, string $attributes = '') : string
+    public function getBodyContent(string|null $alias = null, string $attributes = ''): string
     {
 
         if (empty($alias)) {
@@ -744,7 +756,7 @@ class PageBuilder
         return $this->body_content ?? '';
     }
 
-    public function getPageContent(string|null $alias = null, string $attributes = '') : string
+    public function getPageContent(string|null $alias = null, string $attributes = ''): string
     {
         if (empty($alias)) {
             $alias = $this->getAlias();
@@ -774,12 +786,12 @@ class PageBuilder
         return $content ?? '';
     }
 
-    public function getHTMLContent(string|null $alias = null, string $attributes = '') : string
+    public function getHTMLContent(string|null $alias = null, string $attributes = ''): string
     {
         return $this->getPageContent($alias, $attributes) ?? '';
     }
 
-    public function getDomain() : string
+    public function getDomain(): string
     {
         if (empty($this->domain)) {
             $this->domain = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
@@ -805,7 +817,7 @@ class PageBuilder
         return $alias;
     }
 
-    public function getContent(string|null $alias = null) : string
+    public function getContent(string|null $alias = null): string
     {
         if (empty($alias)) {
             $alias = $this->getAlias();
@@ -832,7 +844,7 @@ class PageBuilder
         echo $this->getContent($alias);
     }
 
-    public static function getAliasUsingURL(string|null $url = null) : string
+    public static function getAliasUsingURL(string|null $url = null): string
     {
         if (empty($url)) {
             $url = $_SERVER['SCRIPT_NAME'] ?? $_SERVER['PHP_SELF'] ?? null;
