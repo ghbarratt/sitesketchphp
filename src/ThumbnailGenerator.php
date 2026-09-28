@@ -6,87 +6,84 @@ namespace Sitesketch;
 
 class ThumbnailGenerator
 {
-    private static $default_images_directory = 'images';
+    private static $defaultImagesDirectory = 'images';
 
+    public $workingWebPath;
     public $working_web_path;
+    public $webrootPath;
     public $webroot_path;
+    public $workingPath;
     public $working_path;
 
+    public $userGroup = 'dev';
     public $user_group = 'dev';
+    public $setUserGroup = true;
     public $set_user_group = true;
 
     protected $images;
-
+    protected $thumbnailSizes;
     protected $thumbnail_sizes;
-    // Example of what thumbnail_sizes could look like
-    //protected $thumbnail_sizes = array
-    //(
-        //'small' => array
-        //(
-            //'width'     => '80',
-            //'method'    => 'width'
-        //),
-        //'large' => array
-        //(
-            //'width'     => '800',
-            //'height'    => '600',
-            //'method'    => 'max_both'
-        //)
-    //);
 
-
-    public function __construct($working_web_path, $thumbnail_sizes = false)
+    public function __construct($workingWebPath, $thumbnailSizes = false)
     {
-        if ($working_web_path[strlen($working_web_path) - 1] == '/') {
-            $working_web_path = substr($working_web_path, 0, strlen($working_web_path) - 1);
+        if ($workingWebPath[strlen($workingWebPath) - 1] == '/') {
+            $workingWebPath = substr($workingWebPath, 0, strlen($workingWebPath) - 1);
         }
-        if (!$this->resolveWorkingPath($working_web_path)) {
+        if (!$this->resolveWorkingPath($workingWebPath)) {
             return false;
         } else {
-            $this->working_web_path = $working_web_path;
+            $this->workingWebPath = $workingWebPath;
+            $this->working_web_path = $workingWebPath;
         }
 
-        if (isset($thumbnail_sizes) && is_array($thumbnail_sizes)) {
-            $this->setThumbnailSizes($thumbnail_sizes);
+        if (isset($thumbnailSizes) && is_array($thumbnailSizes)) {
+            $this->setThumbnailSizes($thumbnailSizes);
         }
     }
 
-    public function resolveWorkingPath($working_web_path = false)
+    public function resolveWorkingPath($workingWebPath = false)
     {
+        $currentWorkingPath = $this->workingPath ?? $this->working_path;
+        $currentWorkingWebPath = $this->workingWebPath ?? $this->working_web_path;
 
-
-        if (!$this->working_path || $this->working_web_path != $working_web_path) {
-            if (!isset($this->webroot_path) || !$this->webroot_path) {
-                $this->resolveWebrootPath();
+        if (!$currentWorkingPath || $currentWorkingWebPath != $workingWebPath) {
+            $webroot = $this->webrootPath ?? $this->webroot_path;
+            if (!isset($webroot) || !$webroot) {
+                $webroot = $this->resolveWebrootPath();
             }
 
-            if ($working_web_path[0] == '/') {
-                $working_web_path = substr($working_web_path, 1);
+            if ($workingWebPath[0] == '/') {
+                $workingWebPath = substr($workingWebPath, 1);
             }
 
-            $working_path = $this->webroot_path . '/' . $working_web_path;
+            $workingPath = $webroot . '/' . $workingWebPath;
 
-            if (is_dir($working_path)) {
-                $this->working_path = $working_path;
+            if (is_dir($workingPath)) {
+                $this->workingPath = $workingPath;
+                $this->working_path = $workingPath;
             } else {
                 return false;
             }
         }
 
-        return $this->working_path;
+        return $this->workingPath ?? $this->working_path;
     }
 
-    public function setThumbnailSizes($thumbnail_sizes = false)
+    public function setThumbnailSizes($thumbnailSizes = false)
     {
-        if ($thumbnail_sizes && is_array($thumbnail_sizes)) {
-            $this->thumbnail_sizes = $thumbnail_sizes;
+        if ($thumbnailSizes && is_array($thumbnailSizes)) {
+            $this->thumbnailSizes = $thumbnailSizes;
+            $this->thumbnail_sizes = $thumbnailSizes;
         }
     }
 
-    public function addThumbnailSize($thumbnail_size)
+    public function addThumbnailSize($thumbnailSize)
     {
-        if (is_array($thumbnail_size) && isset($thumbnail_size['method'])) {
-            $this->thumbnailSizes = array_merge($this->thumbnail_sizes, $thumbnail_size);
+        if (is_array($thumbnailSize) && isset($thumbnailSize['method'])) {
+            $existing = $this->thumbnailSizes ?? $this->thumbnail_sizes ?? [];
+            $merged = array_merge($existing, $thumbnailSize);
+            $this->thumbnailSizes = $merged;
+            $this->thumbnail_sizes = $merged;
             return true;
         } else {
             return false;
@@ -95,20 +92,20 @@ class ThumbnailGenerator
 
     public function resolveWebrootPath()
     {
-        if (!is_dir($this->webroot_path)) {
+        $webroot = $this->webrootPath ?? $this->webroot_path;
+        if (!$webroot || !is_dir($webroot)) {
             if (isset($_SERVER['DOCUMENT_ROOT']) && is_dir($_SERVER['DOCUMENT_ROOT'])) {
+                $this->webrootPath = $_SERVER['DOCUMENT_ROOT'];
                 $this->webroot_path = $_SERVER['DOCUMENT_ROOT'];
             }
         }
 
-        return $this->webroot_path;
+        return $this->webrootPath ?? $this->webroot_path;
     }
 
     public function isImage($filepath)
     {
-
         $filename = substr($filepath, (strrpos($filepath, '/') + 1));
-
         $extension = trim(strtolower(strrchr($filename, '.')));
 
         switch (strtolower($extension)) {
@@ -118,23 +115,21 @@ class ThumbnailGenerator
             case '.bmp':
             case '.jpeg':
                 return true;
-            break;
             default:
                 break;
         }
 
-        //echo 'DEBUG '.$filepath." is not an image?<br/>\n";
         return false;
     }
 
     public function isThumbnail($filepath)
     {
         $filename = substr($filepath, (strrpos($filepath, '/') + 1));
-
         $answer = false;
+        $sizes = $this->thumbnailSizes ?? $this->thumbnail_sizes;
 
-        if (isset($this->thumbnail_sizes)) {
-            foreach ($this->thumbnail_sizes as $ts_alias => $ts) {
+        if (isset($sizes)) {
+            foreach ($sizes as $tsAlias => $ts) {
                 if (
                     (isset($ts['prefix']) && $ts['prefix'] && strpos($filename, $ts['prefix']) !== false)
                     || (isset($ts['postfix']) && $ts['postfix'] && strpos($filename, $ts['postfix']) !== false)
@@ -143,14 +138,10 @@ class ThumbnailGenerator
                         && $ts['directory']
                         && strpos($filepath, '/' . $ts['directory'] . '/') !== false
                     )
-                    || (isset($ts_alias) && $ts_alias && strpos($filepath, '/' . $ts_alias . '/') !== false)
+                    || (isset($tsAlias) && $tsAlias && strpos($filepath, '/' . $tsAlias . '/') !== false)
                 ) {
-                    echo 'DEBUG ts<pre>';
-                    print_r($ts);
-                    echo '</pre>';
-                    echo 'DEBUG filepath:' . $filepath . "<br/>\n";
                     $answer = true;
-                    break; // out of foreach ts
+                    break;
                 }
             }
         }
@@ -158,38 +149,39 @@ class ThumbnailGenerator
         return $answer;
     }
 
-    private function resolveImages($working_web_path = false, $do_sort = true)
+    private function resolveImages($workingWebPath = false, $doSort = true)
     {
+        $currentWorkingWebPath = $this->workingWebPath ?? $this->working_web_path;
+        $currentWorkingPath = $this->workingPath ?? $this->working_path;
+        $webroot = $this->webrootPath ?? $this->webroot_path;
 
         if (
             !$this->images
             || !is_array($this->images)
-            || ($working_web_path && $working_web_path != $this->working_web_path)
+            || ($workingWebPath && $workingWebPath != $currentWorkingWebPath)
         ) {
             $this->images = [];
 
-            if (!$working_web_path && $this->working_web_path) {
-                $working_web_path = $this->working_web_path;
+            if (!$workingWebPath && $currentWorkingWebPath) {
+                $workingWebPath = $currentWorkingWebPath;
             } else {
                 return false;
             }
 
-            if (!$this->working_path || $this->working_web_path != $working_web_path) {
-                $this->resolveWorkingPath($working_web_path);
+            if (!$currentWorkingPath || $currentWorkingWebPath != $workingWebPath) {
+                $this->resolveWorkingPath($workingWebPath);
+                $currentWorkingPath = $this->workingPath ?? $this->working_path;
+                $webroot = $this->webrootPath ?? $this->webroot_path;
             }
 
-            //echo 'DEBUG working_path:'.$this->working_path."<br/>\n";
-
             $filenames = [];
-            $dp = opendir($this->working_path);
+            $dp = opendir($currentWorkingPath);
             while ($filename = readdir($dp)) {
-                $web_filepath = $working_web_path . '/' . $filename;
+                $webFilepath = $workingWebPath . '/' . $filename;
                 if (
                     $this->isImage($filename)
-                    &&
-                    !$this->isThumbnail($web_filepath)
-                    &&
-                    is_file($this->webroot_path . $web_filepath)
+                    && !$this->isThumbnail($webFilepath)
+                    && is_file($webroot . $webFilepath)
                 ) {
                     $filenames[] = $filename;
                 }
@@ -197,48 +189,45 @@ class ThumbnailGenerator
             closedir($dp);
 
             if (is_array($filenames) && count($filenames)) {
-                //print_r($filenames);
-                if ($do_sort) {
+                if ($doSort) {
                     sort($filenames);
                 }
-                //print_r($filenames);
 
                 foreach ($filenames as $filename) {
-                    $web_filepath = $working_web_path . '/' . $filename;
-                    //echo 'DEBUG Trying '.$web_filepath."<br/>\n";
-                    $temp_image = [];
-                    if (is_file($this->webroot_path . $web_filepath)) {
-                        $temp_image_data = @getimagesize(
-                            $this->webroot_path . $web_filepath,
-                            $temp_extended_image_data
+                    $webFilepath = $workingWebPath . '/' . $filename;
+                    $tempImage = [];
+                    $tempImageData = [];
+                    $tempExtendedImageData = [];
+                    if (is_file($webroot . $webFilepath)) {
+                        $tempImageData = @getimagesize(
+                            $webroot . $webFilepath,
+                            $tempExtendedImageData
                         );
                     }
-                    $new_image_data = [];
-                    $new_image_data['web_path'] = $working_web_path;
-                    $new_image_data['filename'] = $filename;
-                    $new_image_data['width'] = $temp_image_data[0];
-                    $new_image_data['height'] = $temp_image_data[1];
-                    $new_image_data['type'] = $temp_image_data[2];
-                    if (isset($temp_image_data['bits'])) {
-                        $new_image_data['bits'] = $temp_image_data['bits'];
+                    $newImageData = [];
+                    $newImageData['web_path'] = $workingWebPath;
+                    $newImageData['filename'] = $filename;
+                    $newImageData['width'] = $tempImageData[0] ?? 0;
+                    $newImageData['height'] = $tempImageData[1] ?? 0;
+                    $newImageData['type'] = $tempImageData[2] ?? 0;
+                    if (isset($tempImageData['bits'])) {
+                        $newImageData['bits'] = $tempImageData['bits'];
                     }
-                    if (isset($temp_image_data['channels'])) {
-                        $new_image_data['channels'] = $temp_image_data['channels'];
-                    }
-
-                    //echo 'DEBUG image data <pre>';
-                    //print_r($temp_image_data);
-                    //echo '</pre>';
-
-                    $temp_image_data = array_merge($new_image_data, $temp_extended_image_data);
-
-                    foreach ($temp_image_data as $tid_index => $tid) {
-                        $temp_image[$tid_index] = $tid;
+                    if (isset($tempImageData['channels'])) {
+                        $newImageData['channels'] = $tempImageData['channels'];
                     }
 
-                    $this->images[] = $temp_image;
-                    //else echo 'DEBUG NOT A FILE? '.$this->webroot_path.$web_filepath."<br/>\n";
-                    //else echo 'NOT AN IMAGE OR IS A THUMBNAIL? '.$web_filepath."<br/>\n";
+                    if (is_array($tempExtendedImageData)) {
+                        $tempImageData = array_merge($newImageData, $tempExtendedImageData);
+                    } else {
+                        $tempImageData = $newImageData;
+                    }
+
+                    foreach ($tempImageData as $tidIndex => $tid) {
+                        $tempImage[$tidIndex] = $tid;
+                    }
+
+                    $this->images[] = $tempImage;
                 }
             }
         }
@@ -246,61 +235,50 @@ class ThumbnailGenerator
         return $this->images;
     }
 
-    public function createThumbnail($original_filepath, $thumbnail_filepath, $options)
+    public function createThumbnail($originalFilepath, $thumbnailFilepath, $options)
     {
+        ini_set('memory_limit', '100M');
+        set_time_limit(3600);
 
-        ini_set('memory_limit', '100M'); // Increase memory
-        set_time_limit(3600); // Increase time limit (in seconds)
-
-        if (is_string($options) && isset($this->thumbnail_sizes[$options])) {
-            $options = $this->thumbnail_sizes[$options];
+        $sizes = $this->thumbnailSizes ?? $this->thumbnail_sizes;
+        if (is_string($options) && isset($sizes[$options])) {
+            $options = $sizes[$options];
         }
 
-        $original_size = getimagesize($original_filepath);
+        $originalSize = getimagesize($originalFilepath);
+        $originalWidth = $originalSize[0];
+        $originalHeight = $originalSize[1];
 
-        //echo "DEBUG original_size<pre>";
-        //print_r($original_size);
-        //echo "</pre>";
-
-
-        $original_width = $original_size[0];
-        $original_height = $original_size[1];
-
-        $adjusted_original_width = $original_size[0];
-        $adjusted_original_height = $original_size[1];
+        $adjustedOriginalWidth = $originalSize[0];
+        $adjustedOriginalHeight = $originalSize[1];
+        $thumbnailWidth = $originalWidth;
+        $thumbnailHeight = $originalHeight;
 
         if (isset($options['width'])) {
-            $thumbnail_width = $options['width'];
+            $thumbnailWidth = $options['width'];
         }
         if (isset($options['height'])) {
-            $thumbnail_height = $options['height'];
-        }
-
-        if ($original_width < $original_height) {
-            $orientation = 'portrait';
-        } else {
-            $orientation = 'landscape';
+            $thumbnailHeight = $options['height'];
         }
 
         $fitting = false;
-        $original_aspect_ratio = $original_width / $original_height; // larger is wider
-        $ideal_thumbnail_aspect_ratio = $thumbnail_width / $thumbnail_height; // larger is wider
-        if ($original_aspect_ratio > $ideal_thumbnail_aspect_ratio) {
-            $fitting = 'wide'; // the original is wider than the ideal
-        } elseif ($original_aspect_ratio < $ideal_thumbnail_aspect_ratio) {
-            $fitting = 'tall'; // the original is taller than the ideal
+        $originalAspectRatio = $originalWidth / $originalHeight;
+        $idealThumbnailAspectRatio = $thumbnailWidth / $thumbnailHeight;
+        if ($originalAspectRatio > $idealThumbnailAspectRatio) {
+            $fitting = 'wide';
+        } elseif ($originalAspectRatio < $idealThumbnailAspectRatio) {
+            $fitting = 'tall';
         }
 
         if (isset($options['method'])) {
             $method = strtolower($options['method']);
         } else {
-            $method = 'fit'; // default method
+            $method = 'fit';
         }
 
-        $src_x = 0;
-        $src_y = 0;
+        $srcX = 0;
+        $srcY = 0;
 
-        // smaller and larger methods are the same as width and height methods, except determined by fitting
         if ($method == 'smaller') {
             if ($fitting == 'tall') {
                 $method = 'height';
@@ -316,139 +294,122 @@ class ThumbnailGenerator
         }
 
         if ($method == 'width') {
-            $thumbnail_height = $thumbnail_width * $original_height / $original_width;
+            $thumbnailHeight = $thumbnailWidth * $originalHeight / $originalWidth;
         } elseif ($method == 'height') {
-            $thumbnail_width = $thumbnail_height * $original_width / $original_height;
+            $thumbnailWidth = $thumbnailHeight * $originalWidth / $originalHeight;
         } elseif (
             ($method == 'fit' && $fitting == 'tall')
-            ||
-            ($method == 'crop' && $fitting == 'wide')
+            || ($method == 'crop' && $fitting == 'wide')
         ) {
-            $adjusted_original_width = $original_height * $thumbnail_width / $thumbnail_height;
-            $src_x = ($original_width - $adjusted_original_width) / 2;
+            $adjustedOriginalWidth = $originalHeight * $thumbnailWidth / $thumbnailHeight;
+            $srcX = ($originalWidth - $adjustedOriginalWidth) / 2;
         } elseif (
             ($method == 'crop' && $fitting == 'tall')
-            ||
-            ($method == 'fit' && $fitting == 'wide')
+            || ($method == 'fit' && $fitting == 'wide')
         ) {
-            $adjusted_original_height = $original_width * $thumbnail_height / $thumbnail_width;
-            $src_y = ($original_height - $adjusted_original_height) / 2;
+            $adjustedOriginalHeight = $originalWidth * $thumbnailHeight / $thumbnailWidth;
+            $srcY = ($originalHeight - $adjustedOriginalHeight) / 2;
         }
 
-        // Method "stretch" requires no param alterations
+        $thumbnailImage = imagecreatetruecolor((int)$thumbnailWidth, (int)$thumbnailHeight);
 
-
-        $thumbnail_image = imagecreatetruecolor($thumbnail_width, $thumbnail_height);
-
-        switch ($original_size[2]) {
+        switch ($originalSize[2]) {
             case 1:
-                    $original_image = imagecreatefromgif($original_filepath);
+                $originalImage = imagecreatefromgif($originalFilepath);
                 break;
             case 2:
-                    $original_image = imagecreatefromjpeg($original_filepath);
+                $originalImage = imagecreatefromjpeg($originalFilepath);
                 break;
             case 3:
-                    $original_image = imagecreatefrompng($original_filepath);
+                $originalImage = imagecreatefrompng($originalFilepath);
                 break;
             default:
-                    $original_image = imagecreatefromjpeg($original_filepath);
+                $originalImage = imagecreatefromjpeg($originalFilepath);
                 break;
         }
 
-        if (isset($options['quality'])) {
-            $quality = $options['quality'];
-        } else {
-            $quality = 80;
-        }
+        $quality = isset($options['quality']) ? $options['quality'] : 80;
 
         imagecopyresized(
-            $thumbnail_image,
-            $original_image,
+            $thumbnailImage,
+            $originalImage,
             0,
             0,
-            $src_x,
-            $src_y,
-            $thumbnail_width,
-            $thumbnail_height,
-            $adjusted_original_width,
-            $adjusted_original_height
+            (int)$srcX,
+            (int)$srcY,
+            (int)$thumbnailWidth,
+            (int)$thumbnailHeight,
+            (int)$adjustedOriginalWidth,
+            (int)$adjustedOriginalHeight
         );
 
-        if (imagejpeg($thumbnail_image, $thumbnail_filepath, $quality)) {
-            chmod($thumbnail_filepath, 0664);
-            @chgrp($thumbnail_filepath, $this->user_group);
+        $result = false;
+        if (imagejpeg($thumbnailImage, $thumbnailFilepath, $quality)) {
+            chmod($thumbnailFilepath, 0664);
+            $userGroup = $this->userGroup ?? $this->user_group;
+            @chgrp($thumbnailFilepath, $userGroup);
             $result = true;
         }
-        imagedestroy($thumbnail_image);
-        imagedestroy($original_image);
+        imagedestroy($thumbnailImage);
+        imagedestroy($originalImage);
 
         return $result;
     }
 
-    public function createThumbnails($force_creation = false)
+    public function createThumbnails($forceCreation = false)
     {
-
         if (!isset($this->images) || !is_array($this->images)) {
             $this->resolveImages();
         }
-
-        //echo 'DEBUG images <pre>';
-        //print_r($this->images);
-        //echo '</pre>';
 
         if (!is_array($this->images)) {
             return false;
         }
 
+        $sizes = $this->thumbnailSizes ?? $this->thumbnail_sizes;
+        $webroot = $this->webrootPath ?? $this->webroot_path;
+        $userGroup = $this->userGroup ?? $this->user_group;
+
         foreach ($this->images as &$i) {
-            foreach ($this->thumbnail_sizes as $ts_alias => $ts) {
+            foreach ($sizes as $tsAlias => $ts) {
                 if (
                     (isset($ts['prefix']) && $ts['prefix'])
-                    ||
-                    (isset($ts['postfix']) && $ts['postfix'])
+                    || (isset($ts['postfix']) && $ts['postfix'])
                 ) {
-                    $dot_pos = strrpos($i['filename'], '.');
-                    $filename_base = substr($i['filename'], 0, $dot_pos);
-                    $extension = substr($i['filename'], $dot_pos + 1);
-                    $thumbnail_web_filepath = $i['web_path'] . '/' . (isset($ts['prefix']) ? $ts['prefix'] : '')
-                        . $filename_base . (isset($ts['postfix']) ? $ts['postfix'] : '') . '.' . $extension;
+                    $dotPos = strrpos($i['filename'], '.');
+                    $filenameBase = substr($i['filename'], 0, $dotPos);
+                    $extension = substr($i['filename'], $dotPos + 1);
+                    $thumbnailWebFilepath = $i['web_path'] . '/' . (isset($ts['prefix']) ? $ts['prefix'] : '')
+                        . $filenameBase . (isset($ts['postfix']) ? $ts['postfix'] : '') . '.' . $extension;
                 } else {
-                    if (!is_dir($this->webroot_path . $i['web_path'] . '/' . $ts_alias)) {
-                        if (!mkdir($this->webroot_path . $i['web_path'] . '/' . $ts_alias)) {
+                    $targetDir = $webroot . $i['web_path'] . '/' . $tsAlias;
+                    if (!is_dir($targetDir)) {
+                        if (!mkdir($targetDir)) {
                             $username = exec('whoami');
-                            echo 'ERROR Could not create directory ' . $this->webroot_path . $i['web_path'] . '/'
-                                . $ts_alias . ' as ' . $username;
+                            echo 'ERROR Could not create directory ' . $targetDir . ' as ' . $username;
                             return false;
                         }
-                        $chmod_result = chmod($this->webroot_path . $i['web_path'] . '/' . $ts_alias, 0775);
-                        if (!$chmod_result) {
-                            echo 'DEBUG Attempt to set permissions was ' . ($chmod_result ? '' : 'un') . 'successful'
-                                . "<br/>\n";
-                        }
-                        $chgrp_result = @chgrp($this->webroot_path . $i['web_path'] . '/'
-                            . $ts_alias, $this->user_group);
-                        if (!$chgrp_result) {
-                            echo 'DEBUG Unable to set group to ' . $this->user_group . "<br/>\n";
-                            if ($chmod_result) {
-                                chmod($this->webroot_path . $i['web_path'] . '/' . $ts_alias, 0777);
-                            }
+                        $chmodResult = chmod($targetDir, 0775);
+                        $chgrpResult = @chgrp($targetDir, $userGroup);
+                        if (!$chgrpResult && $chmodResult) {
+                            chmod($targetDir, 0777);
                         }
                     }
-                    $thumbnail_web_filepath = $i['web_path'] . '/' . $ts_alias . '/' . $i['filename'];
+                    $thumbnailWebFilepath = $i['web_path'] . '/' . $tsAlias . '/' . $i['filename'];
                 }
-                if ($force_creation || !is_file($this->webroot_path . $thumbnail_web_filepath)) {
+                if ($forceCreation || !is_file($webroot . $thumbnailWebFilepath)) {
                     $this->createThumbnail(
-                        $this->webroot_path . $i['web_path'] . '/' . $i['filename'],
-                        $this->webroot_path . $thumbnail_web_filepath,
+                        $webroot . $i['web_path'] . '/' . $i['filename'],
+                        $webroot . $thumbnailWebFilepath,
                         $ts
                     );
                 }
-                $i['thumbnail_web_filepaths'][$ts_alias] = $thumbnail_web_filepath;
+                $i['thumbnail_web_filepaths'][$tsAlias] = $thumbnailWebFilepath;
             }
         }
     }
 
-    public function getContent($template = false, $additional_replacements = false)
+    public function getContent($template = false, $additionalReplacements = false)
     {
         return 'The Thumbnailer does not provide content';
     }
