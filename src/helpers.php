@@ -10,7 +10,7 @@ if (!function_exists('isValidIP')) {
     function isValidIP($ip)
     {
         if (!empty($ip) && ip2long($ip) != -1) {
-            $reserved_ips = [
+            $reservedIps = [
                 ['0.0.0.0', '2.255.255.255'],
                 ['10.0.0.0', '10.255.255.255'],
                 ['127.0.0.0', '127.255.255.255'],
@@ -18,9 +18,9 @@ if (!function_exists('isValidIP')) {
                 ['172.16.0.0', '172.31.255.255'],
                 ['192.0.2.0', '192.0.2.255'],
                 ['192.168.0.0', '192.168.255.255'],
-                ['255.255.255.0', '255.255.255.255']
+                ['255.255.255.0', '255.255.255.255'],
             ];
-            foreach ($reserved_ips as $r) {
+            foreach ($reservedIps as $r) {
                 $min = ip2long($r[0]);
                 $max = ip2long($r[1]);
                 if ((ip2long($ip) >= $min) && (ip2long($ip) <= $max)) {
@@ -112,51 +112,51 @@ if (!function_exists('isEmailValid')) {
 }
 
 if (!function_exists('getContentFromFile')) {
-    function getContentFromFile($filename, $line_prefix = '')
+    function getContentFromFile($filename, $linePrefix = '')
     {
-        $file_text = getTextFromFile($filename);
+        $fileText = getTextFromFile($filename);
         $content = '';
 
-        $file_lines = explode("\n", $file_text);
-        foreach ($file_lines as $Line) {
-            $content .= $line_prefix . $Line . "\n";
+        $fileLines = explode("\n", $fileText);
+        foreach ($fileLines as $line) {
+            $content .= $linePrefix . $line . "\n";
         }
 
         $replacements = [
             'elevated' => [
                 'start_tag' => '<span type="elevated">',
                 'end_tag' => '</span>',
-                'function' => 'wrapElevatedContent'
+                'function' => 'wrapElevatedContent',
             ],
             'quote' => [
                 'start_tag' => '<q>',
                 'end_tag' => '</q>',
-                'function' => 'wrapQuoteContent'
+                'function' => 'wrapQuoteContent',
             ],
         ];
 
         foreach ($replacements as $r) {
-            $start_position = strpos($content, $r['start_tag']);
+            $startPosition = strpos($content, $r['start_tag']);
 
-            while ($start_position !== false) {
-                $end_position = strpos($content, $r['end_tag'], $start_position);
-                if ($end_position !== false) {
-                    $to_replace = substr(
+            while ($startPosition !== false) {
+                $endPosition = strpos($content, $r['end_tag'], $startPosition);
+                if ($endPosition !== false) {
+                    $toReplace = substr(
                         $content,
-                        $start_position,
-                        (($end_position + strlen($r['end_tag'])) - $start_position)
+                        $startPosition,
+                        (($endPosition + strlen($r['end_tag'])) - $startPosition)
                     );
-                    $inside_content = substr(
+                    $insideContent = substr(
                         $content,
-                        $start_position + strlen($r['start_tag']),
-                        ($end_position - ($start_position + strlen($r['start_tag'])))
+                        $startPosition + strlen($r['start_tag']),
+                        ($endPosition - ($startPosition + strlen($r['start_tag'])))
                     );
-                    $replace_with = function_exists($r['function']) ?
-                        $r['function']($inside_content, $line_prefix)
-                        : $inside_content;
-                    $content = str_replace($to_replace, $replace_with, $content);
+                    $replaceWith = function_exists($r['function']) ?
+                        $r['function']($insideContent, $linePrefix)
+                        : $insideContent;
+                    $content = str_replace($toReplace, $replaceWith, $content);
                 }
-                $start_position = strpos($content, $r['start_tag']);
+                $startPosition = strpos($content, $r['start_tag']);
             }
         }
 
@@ -165,28 +165,28 @@ if (!function_exists('getContentFromFile')) {
 }
 
 if (!function_exists('getTextFromFile')) {
-    function getTextFromFile($filename, $Debugging = false)
+    function getTextFromFile($filename, $debugging = false)
     {
-        $file_text = '';
-        $FileHandler = @fopen($filename, 'r');
-        if ($FileHandler) {
-            $file_text = fread($FileHandler, filesize($filename));
-            fclose($FileHandler);
+        $fileText = '';
+        $fileHandler = @fopen($filename, 'r');
+        if ($fileHandler) {
+            $fileText = fread($fileHandler, filesize($filename));
+            fclose($fileHandler);
         } else {
-            $file_text = 'ERROR: fopen could not open ' . $filename . ".\n";
+            $fileText = 'ERROR: fopen could not open ' . $filename . ".\n";
         }
 
-        return $file_text;
+        return $fileText;
     }
 }
 
 if (!function_exists('adjustLinePrefix')) {
     function adjustLinePrefix($amount = 0)
     {
-        global $line_prefix;
+        global $linePrefix, $line_prefix;
 
-        if (!isset($line_prefix)) {
-            $line_prefix = "\t\t\t\t";
+        if (!isset($linePrefix)) {
+            $linePrefix = $line_prefix ?? "\t\t\t\t";
         }
 
         if (!is_int($amount)) {
@@ -194,43 +194,47 @@ if (!function_exists('adjustLinePrefix')) {
         }
 
         if ($amount < 0) {
-            $line_prefix = substr($line_prefix, abs($amount));
+            $linePrefix = substr($linePrefix, abs($amount));
         } else {
             for ($i = 0; $i < $amount; $i++) {
-                $line_prefix = "\t" . $line_prefix;
+                $linePrefix = "\t" . $linePrefix;
             }
         }
 
-        return $line_prefix;
+        return $linePrefix;
     }
 }
 
 if (!function_exists('getButtonContent')) {
     function getButtonContent($alias, $id, $link, $alt = '', $extra = '')
     {
-        global $line_prefix;
+        global $linePrefix, $line_prefix;
 
-        if (!isset($line_prefix)) {
-            $line_prefix = "\t\t\t\t";
+        if (!isset($linePrefix)) {
+            $linePrefix = $line_prefix ?? "\t\t\t\t";
         }
 
-        $content = $line_prefix . "<a href=\"" . $link . "\">\n";
-        $content .= $line_prefix . "\t<img src=\"/images/button_" . $alias . '_up.gif" alt="' . $alt . '" id="' . $id
+        $content = $linePrefix . "<a href=\"" . $link . "\">\n";
+        $content .= $linePrefix . "\t<img src=\"/images/button_" . $alias . '_up.gif" alt="' . $alt . '" id="' . $id
             . '" name="' . $id . '" onmouseover="changeImage(\'' . $id . '\', \'/images/button_' . $alias
             . '_hover.gif\');" onmouseout="changeImage(\'' . $id . '\', \'/images/button_' . $alias
             . '_up.gif\');" onmousedown="changeImage(\'' . $id . '\', \'/images/button_' . $alias
             . '_down.gif\');" onmouseup="changeImage(\'' . $id . '\', \'/images/button_' . $alias . '_hover.gif\');" '
             . $extra . ">\n";
-        $content .= $line_prefix . "</a>\n";
+        $content .= $linePrefix . "</a>\n";
 
         return $content;
     }
 }
 
 if (!function_exists('getSelectInputContent')) {
-    function getSelectInputContent($alias, $values, $labels = false, $default = false, $extra_attributes = '')
+    function getSelectInputContent($alias, $values, $labels = false, $default = false, $extraAttributes = '')
     {
-        global $line_prefix;
+        global $linePrefix, $line_prefix;
+
+        if (!isset($linePrefix)) {
+            $linePrefix = $line_prefix ?? "\t\t\t\t";
+        }
 
         if (!is_array($values)) {
             return false;
@@ -240,41 +244,45 @@ if (!function_exists('getSelectInputContent')) {
         }
 
         $content = '';
-        $content .= $line_prefix . '<select id="' . $alias . '" name="' . $alias . '" ' . $extra_attributes . ">\n";
+        $content .= $linePrefix . '<select id="' . $alias . '" name="' . $alias . '" ' . $extraAttributes . ">\n";
         for ($i = 0; $i < count($values); $i++) {
-            $temp_values = $values[$i];
-            $temp_label = isset($labels[$i]) ? $labels[$i] : $temp_values;
+            $tempValues = $values[$i];
+            $tempLabel = isset($labels[$i]) ? $labels[$i] : $tempValues;
 
-            $content .= $line_prefix . "\t<option value=\"" . $temp_values . '"';
-            if (($temp_values == $default) || ($temp_label == $default)) {
+            $content .= $linePrefix . "\t<option value=\"" . $tempValues . '"';
+            if (($tempValues == $default) || ($tempLabel == $default)) {
                 $content .= ' selected';
             }
-            $content .= '>' . $temp_label . "</option>\n";
+            $content .= '>' . $tempLabel . "</option>\n";
         }
-        $content .= $line_prefix . "</select>\n";
+        $content .= $linePrefix . "</select>\n";
 
         return $content;
     }
 }
 
 if (!function_exists('getSelectContent')) {
-    function getSelectContent($alias, $values, $labels = false, $default = false, $extra_attributes = '')
+    function getSelectContent($alias, $values, $labels = false, $default = false, $extraAttributes = '')
     {
-        return getSelectInputContent($alias, $values, $labels, $default, $extra_attributes);
+        return getSelectInputContent($alias, $values, $labels, $default, $extraAttributes);
     }
 }
 
 if (!function_exists('getDropDownInputContent')) {
-    function getDropDownInputContent($alias, $values, $labels = false, $default = false, $extra_attributes = '')
+    function getDropDownInputContent($alias, $values, $labels = false, $default = false, $extraAttributes = '')
     {
-        return getSelectInputContent($alias, $values, $labels, $default, $extra_attributes);
+        return getSelectInputContent($alias, $values, $labels, $default, $extraAttributes);
     }
 }
 
 if (!function_exists('getRadioInputContent')) {
-    function getRadioInputContent($alias, $values, $labels = false, $default = false, $extra_attributes = '')
+    function getRadioInputContent($alias, $values, $labels = false, $default = false, $extraAttributes = '')
     {
-        global $line_prefix;
+        global $linePrefix, $line_prefix;
+
+        if (!isset($linePrefix)) {
+            $linePrefix = $line_prefix ?? "\t\t\t\t";
+        }
 
         if (!is_array($values)) {
             return false;
@@ -285,14 +293,14 @@ if (!function_exists('getRadioInputContent')) {
 
         $content = '';
         for ($i = 0; $i < count($values); $i++) {
-            $temp_values = $values[$i];
-            $temp_label = isset($labels[$i]) ? $labels[$i] : $temp_values;
+            $tempValues = $values[$i];
+            $tempLabel = isset($labels[$i]) ? $labels[$i] : $tempValues;
 
-            $content .= $line_prefix . "\t<input type=\"radio\" name=\"" . $alias . '" value="' . $temp_values . '"';
-            if (($temp_values == $default) || ($temp_label == $default)) {
+            $content .= $linePrefix . "\t<input type=\"radio\" name=\"" . $alias . '" value="' . $tempValues . '"';
+            if (($tempValues == $default) || ($tempLabel == $default)) {
                 $content .= ' checked';
             }
-            $content .= '>' . $temp_label . "\n";
+            $content .= '>' . $tempLabel . "\n";
         }
 
         return $content;
@@ -302,108 +310,108 @@ if (!function_exists('getRadioInputContent')) {
 if (!function_exists('getDateInputsContent')) {
     function getDateInputsContent(
         $alias = false,
-        $default_date = false,
-        $min_year = false,
-        $max_year = false,
+        $defaultDate = false,
+        $minYear = false,
+        $maxYear = false,
         $format = false,
-        $place_base_input = 'hidden'
+        $placeBaseInput = 'hidden'
     ) {
-        global $line_prefix;
+        global $linePrefix, $line_prefix;
 
-        if (!$line_prefix) {
-            $line_prefix = "\t\t\t\t";
+        if (!$linePrefix) {
+            $linePrefix = $line_prefix ?? "\t\t\t\t";
         }
 
         if (isset($_POST[$alias]) && $_POST[$alias]) {
-            $default_date = $_POST[$alias];
+            $defaultDate = $_POST[$alias];
         }
 
-        $default_year = null;
-        $default_month = null;
-        $default_day = null;
+        $defaultYear = null;
+        $defaultMonth = null;
+        $defaultDay = null;
 
-        if (is_numeric($default_date)) {
-            if (strlen((string)$default_date) == 8) {
+        if (is_numeric($defaultDate)) {
+            if (strlen((string)$defaultDate) == 8) {
                 // Eightdate
-                $default_year = intval(substr((string)$default_date, 0, 4));
-                $default_month = intval(substr((string)$default_date, 4, 2));
-                $default_day = intval(substr((string)$default_date, 6, 2));
-            } elseif (strlen((string)$default_date) == 6) {
+                $defaultYear = intval(substr((string)$defaultDate, 0, 4));
+                $defaultMonth = intval(substr((string)$defaultDate, 4, 2));
+                $defaultDay = intval(substr((string)$defaultDate, 6, 2));
+            } elseif (strlen((string)$defaultDate) == 6) {
                 // Sixdate
-                $default_year = 2000 + intval(substr((string)$default_date, 0, 2));
-                $default_month = intval(substr((string)$default_date, 2, 2));
-                $default_day = intval(substr((string)$default_date, 4, 2));
+                $defaultYear = 2000 + intval(substr((string)$defaultDate, 0, 2));
+                $defaultMonth = intval(substr((string)$defaultDate, 2, 2));
+                $defaultDay = intval(substr((string)$defaultDate, 4, 2));
             } else {
                 // Unix timestamp
-                $default_year = intval(date('Y', $default_date));
-                $default_month = intval(date('m', $default_date));
-                $default_day = intval(date('d', $default_date));
+                $defaultYear = intval(date('Y', $defaultDate));
+                $defaultMonth = intval(date('m', $defaultDate));
+                $defaultDay = intval(date('d', $defaultDate));
             }
-        } elseif (is_string($default_date) && strlen($default_date) > 7) {
-            $dash_parts = explode('-', $default_date);
-            $slash_parts = explode('/', $default_date);
-            if (count($dash_parts) == 3) {
-                $default_year = $dash_parts[0];
-                $default_month = $dash_parts[1];
-                $default_day = $dash_parts[2];
-            } elseif (count($slash_parts) == 3) {
-                $default_year = $slash_parts[0];
-                $default_month = $slash_parts[1];
-                $default_day = $slash_parts[2];
-            } elseif (strlen($default_date) == 10) {
+        } elseif (is_string($defaultDate) && strlen($defaultDate) > 7) {
+            $dashParts = explode('-', $defaultDate);
+            $slashParts = explode('/', $defaultDate);
+            if (count($dashParts) == 3) {
+                $defaultYear = $dashParts[0];
+                $defaultMonth = $dashParts[1];
+                $defaultDay = $dashParts[2];
+            } elseif (count($slashParts) == 3) {
+                $defaultYear = $slashParts[0];
+                $defaultMonth = $slashParts[1];
+                $defaultDay = $slashParts[2];
+            } elseif (strlen($defaultDate) == 10) {
                 // YYYYXMMXDD
-                $default_year = intval(substr($default_date, 0, 4));
-                $default_month = intval(substr($default_date, 5, 2));
-                $default_day = intval(substr($default_date, 8, 2));
-            } elseif (strlen($default_date) == 8) {
+                $defaultYear = intval(substr($defaultDate, 0, 4));
+                $defaultMonth = intval(substr($defaultDate, 5, 2));
+                $defaultDay = intval(substr($defaultDate, 8, 2));
+            } elseif (strlen($defaultDate) == 8) {
                 // YYXMMXDD
-                $default_year = intval(substr($default_date, 0, 2));
-                $default_month = intval(substr($default_date, 3, 2));
-                $default_day = intval(substr($default_date, 7, 2));
+                $defaultYear = intval(substr($defaultDate, 0, 2));
+                $defaultMonth = intval(substr($defaultDate, 3, 2));
+                $defaultDay = intval(substr($defaultDate, 7, 2));
             } else {
-                $time = strtotime($default_date);
-                $default_year = intval(date('Y', $time));
-                $default_month = intval(date('m', $time));
-                $default_day = intval(date('d', $time));
+                $time = strtotime($defaultDate);
+                $defaultYear = intval(date('Y', $time));
+                $defaultMonth = intval(date('m', $time));
+                $defaultDay = intval(date('d', $time));
             }
         }
 
-        if (is_numeric($min_year)) {
-            if (strlen((string)$min_year) == 4) {
-                $min_year = intval(substr((string)$min_year, 0, 4));
-            } elseif (strlen((string)$min_year) == 2) {
-                $min_year = 2000 + intval($min_year);
+        if (is_numeric($minYear)) {
+            if (strlen((string)$minYear) == 4) {
+                $minYear = intval(substr((string)$minYear, 0, 4));
+            } elseif (strlen((string)$minYear) == 2) {
+                $minYear = 2000 + intval($minYear);
             } else {
-                $min_year = intval(date('Y', $min_year));
+                $minYear = intval(date('Y', $minYear));
             }
         } else {
-            $min_year = intval(date('Y')) - 10;
+            $minYear = intval(date('Y')) - 10;
         }
 
-        if (is_numeric($max_year)) {
-            if (strlen((string)$max_year) == 4) {
-                $max_year = intval(substr((string)$max_year, 0, 4));
-            } elseif (strlen((string)$max_year) == 2) {
-                $max_year = 2000 + intval($max_year);
+        if (is_numeric($maxYear)) {
+            if (strlen((string)$maxYear) == 4) {
+                $maxYear = intval(substr((string)$maxYear, 0, 4));
+            } elseif (strlen((string)$maxYear) == 2) {
+                $maxYear = 2000 + intval($maxYear);
             } else {
-                $max_year = intval(date('Y', $max_year));
+                $maxYear = intval(date('Y', $maxYear));
             }
         } else {
-            $max_year = intval(date('Y')) + 10;
+            $maxYear = intval(date('Y')) + 10;
         }
 
-        if ($default_year) {
-            if ($min_year > $default_year) {
-                $min_year = $default_year;
+        if ($defaultYear) {
+            if ($minYear > $defaultYear) {
+                $minYear = $defaultYear;
             }
-            if ($max_year < $default_year) {
-                $max_year = $default_year;
+            if ($maxYear < $defaultYear) {
+                $maxYear = $defaultYear;
             }
         }
 
         // Build the onchange which should just update the "hidden field" when one of the select drop downs get changed
         if ($format && stripos($format, 'timestamp') !== false) {
-            $on_change = 'onchange="{' .
+            $onChange = 'onchange="{' .
                 "year=this.form['" . $alias . "[year]'].value;" .
                 "month=this.form['" . $alias . "[month]'].value;" .
                 "day=this.form['" . $alias . "[day]'].value;" .
@@ -412,62 +420,62 @@ if (!function_exists('getDateInputsContent')) {
                 "this.form['" . $alias . "'].value=parseInt(d.getTime()/1000)+" . (-(mktime() - mktime(0, 0, 0))) . ';'
                 . '}"';
         } else {
-            $on_change = 'onchange="' .
+            $onChange = 'onchange="' .
                 "this.form['" . $alias . "'].value = this.form['" . $alias . "[year]'].value+'-'+this.form['" . $alias
                 . "[month]'].value+'-'+this.form['" . $alias . "[day]'].value;\"";
         }
 
         $content = '';
 
-        $year_labels = ['year'];
-        $year_values = [''];
-        for ($temp_year = $min_year; $temp_year <= $max_year; $temp_year++) {
-            $year_labels[] = $temp_year;
-            $year_values[] = $temp_year;
+        $yearLabels = ['year'];
+        $yearValues = [''];
+        for ($tempYear = $minYear; $tempYear <= $maxYear; $tempYear++) {
+            $yearLabels[] = $tempYear;
+            $yearValues[] = $tempYear;
         }
-        $year_input_content = getSelectInputContent(
+        $yearInputContent = getSelectInputContent(
             $alias . '[year]',
-            $year_values,
-            $year_labels,
-            $default_year,
-            $on_change
+            $yearValues,
+            $yearLabels,
+            $defaultYear,
+            $onChange
         );
 
-        $month_labels = ['month'];
-        $month_values = [''];
-        for ($temp_month = 1; $temp_month <= 12; $temp_month++) {
-            $month_labels[] = date('M', mktime(0, 0, 0, $temp_month, 1));
-            $month_values[] = $temp_month;
+        $monthLabels = ['month'];
+        $monthValues = [''];
+        for ($tempMonth = 1; $tempMonth <= 12; $tempMonth++) {
+            $monthLabels[] = date('M', mktime(0, 0, 0, $tempMonth, 1));
+            $monthValues[] = $tempMonth;
         }
-        $month_input_content = getSelectInputContent(
+        $monthInputContent = getSelectInputContent(
             $alias . '[month]',
-            $month_values,
-            $month_labels,
-            $default_month,
-            $on_change
+            $monthValues,
+            $monthLabels,
+            $defaultMonth,
+            $onChange
         );
 
-        $day_labels = ['day'];
-        $day_values = [''];
-        for ($temp_day = 1; $temp_day <= 31; $temp_day++) {
-            $day_labels[] = $temp_day;
-            $day_values[] = $temp_day;
+        $dayLabels = ['day'];
+        $dayValues = [''];
+        for ($tempDay = 1; $tempDay <= 31; $tempDay++) {
+            $dayLabels[] = $tempDay;
+            $dayValues[] = $tempDay;
         }
-        $day_input_content = getSelectInputContent(
+        $dayInputContent = getSelectInputContent(
             $alias . '[day]',
-            $day_values,
-            $day_labels,
-            $default_day,
-            $on_change
+            $dayValues,
+            $dayLabels,
+            $defaultDay,
+            $onChange
         );
 
         if ($format && (stripos($format, 'mdy') !== false || stripos($format, 'md,y') !== false)) {
             // Month day year order
-            $content .= $month_input_content . $day_input_content;
+            $content .= $monthInputContent . $dayInputContent;
             if (stripos($format, 'md,y') !== false) {
                 $content .= ',';
             }
-            $content .= $year_input_content;
+            $content .= $yearInputContent;
         } elseif (
             $format
             && (stripos($format, 'my') !== false || stripos($format, 'ym') !== false)
@@ -475,25 +483,25 @@ if (!function_exists('getDateInputsContent')) {
         ) {
             // No day
             if (stripos($format, 'ym') !== false) {
-                $content = $year_input_content . $month_input_content;
+                $content = $yearInputContent . $monthInputContent;
             } else {
-                $content .= $month_input_content . $year_input_content;
+                $content .= $monthInputContent . $yearInputContent;
             }
             $content .= '<input name="' . $alias . '[day]" type="hidden" value="1" />';
         } else {
             // Logical order = ymd
-            $content .= $year_input_content . $month_input_content . $day_input_content;
+            $content .= $yearInputContent . $monthInputContent . $dayInputContent;
         }
 
         if ($format && stripos($format, 'timestamp') !== false) {
-            $formatted_default_date = $default_date;
+            $formattedDefaultDate = $defaultDate;
         } else {
-            $formatted_default_date = $default_year . '-' . $default_month . '-' . $default_day;
+            $formattedDefaultDate = $defaultYear . '-' . $defaultMonth . '-' . $defaultDay;
         }
 
-        if ($place_base_input) {
-            $content .= $line_prefix . '<input type="' . $place_base_input . '" name="' . $alias . '" value="'
-                . $formatted_default_date . "\">\n";
+        if ($placeBaseInput) {
+            $content .= $linePrefix . '<input type="' . $placeBaseInput . '" name="' . $alias . '" value="'
+                . $formattedDefaultDate . "\">\n";
         }
 
         return $content;
@@ -501,56 +509,56 @@ if (!function_exists('getDateInputsContent')) {
 }
 
 if (!function_exists('getDOBInputsContent')) {
-    function getDOBInputsContent($min_age = 0, $max_age = 110)
+    function getDOBInputsContent($minAge = 0, $maxAge = 110)
     {
-        global $line_prefix;
+        global $linePrefix, $line_prefix;
 
-        if (!$line_prefix) {
-            $line_prefix = "\t\t\t\t";
+        if (!$linePrefix) {
+            $linePrefix = $line_prefix ?? "\t\t\t\t";
         }
 
         $content = "<!-- DOB INPUTS START HERE -->\n";
 
-        $default_year = intval(date('Y')) - (int)(($min_age + $max_age) / 2);
+        $defaultYear = intval(date('Y')) - (int)(($minAge + $maxAge) / 2);
         if (isset($_POST['dob_year']) && $_POST['dob_year']) {
-            $default_year = $_POST['dob_year'];
+            $defaultYear = $_POST['dob_year'];
         }
         $years = [];
         for (
-            $temp_year = intval(date('Y')) - $max_age;
-            $temp_year <= intval(date('Y')) - ($min_age - 1);
-            $temp_year++
+            $tempYear = intval(date('Y')) - $maxAge;
+            $tempYear <= intval(date('Y')) - ($minAge - 1);
+            $tempYear++
         ) {
-            $years[] = $temp_year;
+            $years[] = $tempYear;
         }
 
-        $content .= getSelectInputContent('dob_year', $years, false, $default_year);
+        $content .= getSelectInputContent('dob_year', $years, false, $defaultYear);
 
-        $default_month = false;
+        $defaultMonth = false;
         if (isset($_POST['dob_month']) && $_POST['dob_month']) {
-            $default_month = $_POST['dob_month'];
+            $defaultMonth = $_POST['dob_month'];
         }
         $months = [];
-        $month_labels = [];
-        for ($temp_month = 1; $temp_month <= 12; $temp_month++) {
-            $month_labels[] = date('M', mktime(0, 0, 0, $temp_month, 1));
-            $months[] = $temp_month;
+        $monthLabels = [];
+        for ($tempMonth = 1; $tempMonth <= 12; $tempMonth++) {
+            $monthLabels[] = date('M', mktime(0, 0, 0, $tempMonth, 1));
+            $months[] = $tempMonth;
         }
 
-        $content .= getSelectInputContent('dob_month', $months, $month_labels, $default_month);
+        $content .= getSelectInputContent('dob_month', $months, $monthLabels, $defaultMonth);
 
-        $default_day = false;
+        $defaultDay = false;
         if (isset($_POST['dob_day']) && $_POST['dob_day']) {
-            $default_day = $_POST['dob_day'];
+            $defaultDay = $_POST['dob_day'];
         }
         $days = [];
-        $day_labels = [];
-        for ($temp_day = 1; $temp_day <= 31; $temp_day++) {
-            $days[] = $temp_day;
-            $day_labels[] = $temp_day;
+        $dayLabels = [];
+        for ($tempDay = 1; $tempDay <= 31; $tempDay++) {
+            $days[] = $tempDay;
+            $dayLabels[] = $tempDay;
         }
 
-        $content .= getSelectInputContent('dob_day', $days, $day_labels, $default_day);
+        $content .= getSelectInputContent('dob_day', $days, $dayLabels, $defaultDay);
 
         $content .= "<!-- DOB INPUTS END HERE -->\n";
 
