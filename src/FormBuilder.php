@@ -87,7 +87,7 @@ class FormBuilder extends ContentBuilder
 
     public function addData($additionalData)
     {
-        $this->data = array_merge($this->data, $additionalData);
+        $this->data = array_merge($this->data ?? [], $additionalData);
     }
 
     protected function buildFields($fields = false)
