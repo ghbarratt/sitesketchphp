@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sitesketch;
 
+use PDO;
 use PDOException;
 use Sitesketch\Traits\DatabaseHandlerTrait;
 
@@ -11,21 +12,22 @@ class UserManager
 {
     use DatabaseHandlerTrait;
 
-    protected $hashing_passwords = true;
-    protected $hash_method = 'sha256';
+    protected $hashingPasswords = true;
+    protected $hashMethod = 'sha256';
 
-    protected $use_salt = true;
-    protected $salt_alias = 'ap_salt';
-    protected $salt_length = 8;
-    protected $salt_field = 'salt';
+    protected $useSalt = true;
+    protected $saltAlias = 'ap_salt';
+    protected $saltLength = 8;
+    protected $saltField = 'salt';
+    protected $salt;
 
-    protected $users_table = 'users';
-    protected $user_roles_table = 'user_roles';
-    protected $id_column = 'id';
-    protected $password_column = 'password_hash';
-    protected $user_role_id_column = 'user_role_id';
-    protected $email_column = 'email';
-    protected $session_key = 'user_id';
+    protected $usersTable = 'users';
+    protected $userRolesTable = 'user_roles';
+    protected $idColumn = 'id';
+    protected $passwordColumn = 'password_hash';
+    protected $userRoleIdColumn = 'user_role_id';
+    protected $emailColumn = 'email';
+    protected $sessionKey = 'user_id';
 
     protected $errors = [];
     protected $messages = [];
@@ -35,10 +37,9 @@ class UserManager
 
     protected $replacements = [];
 
-    protected $user_id;
+    protected $userId;
 
-
-    public function __construct(array|null $config, PDO|null $pdo = null)
+    public function __construct(array|null $config = null, PDO|null $pdo = null)
     {
         $this->cb = new ContentBuilder();
 
@@ -48,7 +49,9 @@ class UserManager
 
         // If passing in a PDO instance feels right to you, do that. Alternatively you can use the just-in-time ("lazy")
         // static singleton that comes with the DatabaseHandlerTrait
-        if (!empty($config['pdo']) && is_object($config['pdo'])) {
+        if ($pdo !== null) {
+            self::$pdo = $pdo;
+        } elseif (!empty($config['pdo']) && is_object($config['pdo'])) {
             self::$pdo = $config['pdo'];
         } elseif (!empty($config['dbh']) && is_object($config['dbh'])) {
             self::$pdo = $config['dbh'];
@@ -60,24 +63,24 @@ class UserManager
             die('You must have a database connection established in order to use the User Manager.');
         }
 
-        if (!empty($config['users_table'])) {
-            $this->users_table = $config['users_table'];
+        if (!empty($config['usersTable']) || !empty($config['users_table'])) {
+            $this->usersTable = $config['usersTable'] ?? $config['users_table'];
         }
-        if (!empty($config['user_roles_table'])) {
-            $this->user_roles_table = $config['user_roles_table'];
+        if (!empty($config['userRolesTable']) || !empty($config['user_roles_table'])) {
+            $this->userRolesTable = $config['userRolesTable'] ?? $config['user_roles_table'];
         }
 
-        if (!empty($config['id_column'])) {
-            $this->id_column = $config['id_column'];
+        if (!empty($config['idColumn']) || !empty($config['id_column'])) {
+            $this->idColumn = $config['idColumn'] ?? $config['id_column'];
         }
-        if (!empty($config['email_column'])) {
-            $this->email_column = $config['email_column'];
+        if (!empty($config['emailColumn']) || !empty($config['email_column'])) {
+            $this->emailColumn = $config['emailColumn'] ?? $config['email_column'];
         }
-        if (!empty($config['password_column'])) {
-            $this->password_column = $config['password_column'];
+        if (!empty($config['passwordColumn']) || !empty($config['password_column'])) {
+            $this->passwordColumn = $config['passwordColumn'] ?? $config['password_column'];
         }
-        if (!empty($config['user_role_id_column'])) {
-            $this->user_role_id_column = $config['user_role_id_column'];
+        if (!empty($config['userRoleIdColumn']) || !empty($config['user_role_id_column'])) {
+            $this->userRoleIdColumn = $config['userRoleIdColumn'] ?? $config['user_role_id_column'];
         }
     }
 
@@ -124,26 +127,24 @@ class UserManager
         $this->replacements = array_merge([$tag => $value], $this->replacements);
     }
 
-    public function insertUser($user_data)
+    public function insertUser($userData)
     {
-
-        if (!isset($user_data)) {
+        if (!isset($userData)) {
             return false;
         }
 
-        if ($this->hashing_passwords && isset($user_data['password']) && strlen($user_data['password']) != 64) {
-            $plaintext_password = $user_data['password'];
-            $user_data['password_hash'] = hash($this->hash_method, $plaintext_password);
+        if ($this->hashingPasswords && isset($userData['password']) && strlen($userData['password']) != 64) {
+            $plaintextPassword = $userData['password'];
+            $userData['password_hash'] = hash($this->hashMethod, $plaintextPassword);
         }
 
         $sql =
         "
-			INSERT INTO " . $this->users_table . "
-			(" . implode(',', array_keys($user_data)) . ")
+			INSERT INTO " . $this->usersTable . "
+			(" . implode(',', array_keys($userData)) . ")
 			VALUES
-			('" . implode("','", $user_data) . "')
+			('" . implode("','", $userData) . "')
 		";
-        //echo 'DEBUG sql <pre>'.$sql.'</pre>';
 
         try {
             $count = self::$pdo->exec($sql);
@@ -159,33 +160,33 @@ class UserManager
         return false;
     }
 
-    public function addUser($user_data)
+    public function addUser($userData)
     {
-        return $this->createUser($user_data);
+        return $this->createUser($userData);
     }
 
-    public function createUser($user_data)
+    public function createUser($userData)
     {
-        $user_id = $this->insertUser($user_data);
-        if ($user_id) {
-            $this->messages[] = 'Successfully created user account for ' . ($user_data['name'] ?: $user_data['email']);
+        $userId = $this->insertUser($userData);
+        if ($userId) {
+            $this->messages[] = 'Successfully created user account for ' . ($userData['name'] ?: $userData['email']);
         }
-        return $user_id;
+        return $userId;
     }
 
     public function getHashMethod()
     {
-        return $this->hash_method;
+        return $this->hashMethod;
     }
 
     private function getRandomString($length = false)
     {
         if (!$length) {
-            $length = $this->salt_length;
+            $length = $this->saltLength;
         }
-        $result = md5(uniqid(rand(), true));
+        $result = md5(uniqid((string)rand(), true));
         if (is_numeric($length) && $length) {
-            $result = substr($result, 0, $length);
+            $result = substr($result, 0, (int)$length);
         }
 
         return $result;
@@ -193,33 +194,32 @@ class UserManager
 
     public function getSaltAlias()
     {
-        return $this->salt_alias;
+        return $this->saltAlias;
     }
 
     public function renewSalt($email = false, $salt = false)
     {
-        // Basically the salt is stored on the client and in the database.
-        $new_salt = $this->getRandomString($this->salt_length);
+        $newSalt = $this->getRandomString($this->saltLength);
 
-        $_SESSION[$this->salt_alias] = $new_salt;
-        $this->salt = $new_salt;
+        $_SESSION[$this->saltAlias] = $newSalt;
+        $this->salt = $newSalt;
 
-        return $new_salt;
+        return $newSalt;
     }
 
     public function isUsingSalt()
     {
-        return $this->use_salt;
+        return $this->useSalt;
     }
 
-    public function getSalt($user_id = false)
+    public function getSalt($userId = false)
     {
         if (isset($this->salt) && $this->salt) {
             return $this->salt;
         }
 
-        if (isset($_SESSION) && isset($_SESSION[$this->salt_alias])) {
-            return $_SESSION[$this->salt_alias];
+        if (isset($_SESSION) && isset($_SESSION[$this->saltAlias])) {
+            return $_SESSION[$this->saltAlias];
         }
 
         return $this->renewSalt();
@@ -229,9 +229,9 @@ class UserManager
     {
         $sql =
         '
-			SELECT ' . $this->id_column . '
-			FROM ' . $this->users_table . '
-			WHERE ' . $this->email_column . ' = ?
+			SELECT ' . $this->idColumn . '
+			FROM ' . $this->usersTable . '
+			WHERE ' . $this->emailColumn . ' = ?
 		';
 
         $sth = self::$pdo->prepare($sql);
@@ -244,50 +244,50 @@ class UserManager
         return false;
     }
 
-    public function isUserValid($email, $password, $options)
+    public function isUserValid($email, $password, $options = null)
     {
-        if ($this->hashing_passwords) {
+        if ($this->hashingPasswords) {
             if (!is_array($options) || !isset($options['prehashed']) || !$options['prehashed']) {
-                $password = hash($this->hash_method, $password);
+                $password = hash($this->hashMethod, $password);
             }
         }
 
         $sql =
         '
-			SELECT ' . $this->password_column . ', ' . $this->id_column . '
-			FROM ' . $this->users_table . "
-			WHERE " . $this->email_column . " = ?
+			SELECT ' . $this->passwordColumn . ', ' . $this->idColumn . '
+			FROM ' . $this->usersTable . "
+			WHERE " . $this->emailColumn . " = ?
 		";
 
         $sth = self::$pdo->prepare($sql);
         try {
             $sth->execute([$email]);
-            $user_data = $sth->fetch();
+            $userData = $sth->fetch();
         } catch (PDOException $e) {
             $this->errors[] = 'There was an SQL error ' . $e->getMessage() . ' SQL: ' . $sql;
             return false;
         }
 
-        $user_id = false;
+        $userId = false;
 
-        if ($password == hash($this->hash_method, $user_data['password_hash'] . $this->getSalt())) {
-            $user_id = $user_data[$this->id_column];
+        if ($password == hash($this->hashMethod, $userData['password_hash'] . $this->getSalt())) {
+            $userId = $userData[$this->idColumn];
         }
 
-        return $user_id;
+        return $userId;
     }
 
     public function logIn($email, $password = null, $options = null)
     {
         if (!empty($options['skip_authentication'])) {
-            $user_id = $this->isUserEmail($email);
+            $userId = $this->isUserEmail($email);
         } else {
-            $user_id = $this->isUserValid($email, $password, $options);
+            $userId = $this->isUserValid($email, $password, $options);
         }
 
-        if ($user_id) {
-            $_SESSION[$this->session_key] = $user_id;
-            $this->user_id = $user_id;
+        if ($userId) {
+            $_SESSION[$this->sessionKey] = $userId;
+            $this->userId = $userId;
             $this->messages[] = 'Successfully logged in as user with email ' . $email;
             return true;
         } else {
@@ -302,39 +302,39 @@ class UserManager
             session_start();
         }
 
-        unset($_SESSION[$this->session_key]);
+        unset($_SESSION[$this->sessionKey]);
     }
 
     public function getUserID()
     {
-        if (isset($this->user_id) && is_numeric($this->user_id)) {
-            return $this->user_id;
+        if (isset($this->userId) && is_numeric($this->userId)) {
+            return $this->userId;
         } elseif (
-            isset($this->session_key)
-            && isset($_SESSION[$this->session_key])
-            && is_numeric($_SESSION[$this->session_key])
+            isset($this->sessionKey)
+            && isset($_SESSION[$this->sessionKey])
+            && is_numeric($_SESSION[$this->sessionKey])
         ) {
-            return $_SESSION[$this->session_key];
+            return $_SESSION[$this->sessionKey];
         }
     }
 
-    public function getUserData($user_id = null)
+    public function getUserData($userId = null)
     {
-        if (empty($user_id)) {
-            $user_id = $this->getUserID();
+        if (empty($userId)) {
+            $userId = $this->getUserID();
         }
 
         $sql = 'SELECT u.*, ur.name AS role_name
 			FROM 
-				' . $this->users_table . ' u
-				LEFT JOIN ' . $this->user_roles_table . ' ur ON ur.' . $this->id_column . ' = '
-            . $this->user_role_id_column . '
-			WHERE u.' . $this->id_column . ' = ?
+				' . $this->usersTable . ' u
+				LEFT JOIN ' . $this->userRolesTable . ' ur ON ur.' . $this->idColumn . ' = '
+            . $this->userRoleIdColumn . '
+			WHERE u.' . $this->idColumn . ' = ?
 		';
 
         $sth = self::$pdo->prepare($sql);
         try {
-            $sth->execute([$user_id]);
+            $sth->execute([$userId]);
             return $sth->fetch();
         } catch (PDOException $e) {
             echo 'There was an SQL error ' . $e->getMessage() . ' SQL: ' . $sql;
@@ -344,8 +344,8 @@ class UserManager
 
     public function getLoggedInUserData()
     {
-        $user_id = $this->getLoggedInUserID();
-        return $this->getUserData($user_id);
+        $userId = $this->getLoggedInUserID();
+        return $this->getUserData($userId);
     }
 
     public function getLoggedInUserID()
@@ -353,8 +353,8 @@ class UserManager
         if (!isset($_SESSION)) {
             session_start();
         }
-        if (isset($_SESSION[$this->session_key])) {
-            return $_SESSION[$this->session_key];
+        if (isset($_SESSION[$this->sessionKey])) {
+            return $_SESSION[$this->sessionKey];
         } else {
             return false;
         }
@@ -370,8 +370,8 @@ class UserManager
         if (!$url) {
             $url = '/login/';
         }
-        if ($user_id = $this->whoIsLoggedIN()) {
-            return $user_id;
+        if ($userId = $this->whoIsLoggedIn()) {
+            return $userId;
         } else {
             header('Location: ' . $url);
             exit;
