@@ -6,28 +6,31 @@ namespace Sitesketch;
 
 class Slideshow extends ThumbnailGenerator
 {
-    private static $default_slideshows_directory;
+    private static $defaultSlideshowsDirectory;
+    public $viewportSize = 'vewport';
     public $viewport_size = 'vewport';
+    public $slideshowWebPath;
     public $slideshow_web_path;
 
-
-    public function __construct($slideshow_web_path, $thumbnail_sizes = false, $alias = false)
+    public function __construct($slideshowWebPath, $thumbnailSizes = false, $alias = false)
     {
-        $this->slideshow_web_path = $slideshow_web_path;
+        $this->slideshowWebPath = $slideshowWebPath;
+        $this->slideshow_web_path = $slideshowWebPath;
 
         if (!$alias) {
-            $this->alias = substr($slideshow_web_path, strrpos($slideshow_web_path, '/', -2) + 1);
+            $this->alias = substr($slideshowWebPath, strrpos($slideshowWebPath, '/', -2) + 1);
         } else {
             $this->alias = $alias;
         }
 
         // Now call the thumbnail generator
-        parent::__construct($slideshow_web_path, $thumbnail_sizes);
+        parent::__construct($slideshowWebPath, $thumbnailSizes);
     }
 
-    public function setViewportSize($viewport_size_in)
+    public function setViewportSize($viewportSizeIn)
     {
-        $this->viewport_size = $viewport_size_in;
+        $this->viewportSize = $viewportSizeIn;
+        $this->viewport_size = $viewportSizeIn;
     }
 
     public function getImageCount()
@@ -41,22 +44,23 @@ class Slideshow extends ThumbnailGenerator
     public function getViewportWidth($size = null)
     {
         if (empty($size)) {
-            $size = $this->viewport_size;
+            $size = $this->viewportSize ?? $this->viewport_size;
         }
-        return $this->thumbnail_sizes[$size]['width'];
+        $sizes = $this->thumbnailSizes ?? $this->thumbnail_sizes;
+        return $sizes[$size]['width'];
     }
 
     public function getViewportHeight($size = null)
     {
         if (empty($size)) {
-            $size = $this->viewport_size;
+            $size = $this->viewportSize ?? $this->viewport_size;
         }
-        return $this->thumbnail_sizes[$size]['height'];
+        $sizes = $this->thumbnailSizes ?? $this->thumbnail_sizes;
+        return $sizes[$size]['height'];
     }
 
-    public function getContent($template = false, $additional_replacements = false)
+    public function getContent($template = false, $additionalReplacements = false)
     {
-
         if (!$template) {
             $template = ContentBuilder::$template_directory . '/slideshow.tpl';
         }
@@ -69,22 +73,25 @@ class Slideshow extends ThumbnailGenerator
             $i['slideshow_alias'] = $this->alias;
         }
 
+        $activeViewportSize = $this->viewportSize ?? $this->viewport_size;
+        $activeThumbnailSizes = $this->thumbnailSizes ?? $this->thumbnail_sizes;
+
         $replacements = [
             'alias'                      => $this->alias,
             'images'                     => $this->images,
             'image_count'                => count($this->images),
-            'thumbnail_sizes'            => $this->thumbnail_sizes,
-            'viewport_size'              => $this->viewport_size,
-            'viewport_width'             => $this->thumbnail_sizes[$this->viewport_size]['width'],
-            'viewport_height'            => $this->thumbnail_sizes[$this->viewport_size]['height']
+            'thumbnail_sizes'            => $activeThumbnailSizes,
+            'viewport_size'              => $activeViewportSize,
+            'viewport_width'             => $activeThumbnailSizes[$activeViewportSize]['width'],
+            'viewport_height'            => $activeThumbnailSizes[$activeViewportSize]['height']
         ];
         if (isset($this->images[0])) {
             $replacements['initial_image_web_filepath'] =
-                $this->images[0]['thumbnail_web_filepaths'][$this->viewport_size];
+                $this->images[0]['thumbnail_web_filepaths'][$activeViewportSize];
         }
 
-        if ($additional_replacements && is_array($additional_replacements)) {
-            $replacements = array_merge($replacements, $additional_replacements);
+        if ($additionalReplacements && is_array($additionalReplacements)) {
+            $replacements = array_merge($replacements, $additionalReplacements);
         }
 
         $cb = new ContentBuilder($template, $replacements);
