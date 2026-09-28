@@ -6,78 +6,102 @@ namespace Sitesketch;
 
 class ContentBuilder
 {
+    public static $templateExtension = 'tpl';
     public static $template_extension = 'tpl';
+    public static $templateDirectory = 'templates';
     public static $template_directory = 'templates';
+    public static $endOfLine = "\n";
     public static $end_of_line = "\n";
+    public static $indentationUnit = "\t";
     public static $indentation_unit = "\t";
+    public static $singularizePluralMagicKeys = false;
     public static $singularize_plural_magic_keys = false;
+    public static $webDirectory = 'public';
     public static $web_directory = 'public';
+    public static $sitePath;
     public static $site_path;
+    public static $siteWebPath;
     public static $site_web_path;
+    public static $sitesketchPath;
     public static $sitesketch_path;
 
+    protected static $tagBang = '!';
     protected static $tag_bang = '!';
+    protected static $tagPrefix = '~';
     protected static $tag_prefix = '~';
+    protected static $tagPostfix = '~';
     protected static $tag_postfix = '~';
+    protected static $tagOpenPrefix = '~';
     protected static $tag_open_prefix = '~';
+    protected static $tagOpenPostfix = '{';
     protected static $tag_open_postfix = '{';
+    protected static $tagClosePrefix = '}';
     protected static $tag_close_prefix = '}';
+    protected static $tagClosePostfix = '~';
     protected static $tag_close_postfix = '~';
 
+    public $linePrefix = '';
     public $line_prefix = '';
     public $replacements;
+    public $removeLeftoverTags = true;
     public $remove_leftover_tags = true;
-    public $use_smart_indentation = false; // faster
+    public $useSmartIndentation = false; // faster
+    public $use_smart_indentation = false;
 
     protected $template;
     protected $content;
+    protected $hasPlacedReplacements = false;
     protected $has_placed_replacements = false;
+    protected $evalOpenTag = '~eval(';
     protected $eval_open_tag = '~eval(';
+    protected $evalCloseTag = ')eval~';
     protected $eval_close_tag = ')eval~';
     protected $errors = [];
-
 
     public function __construct(
         $template = '',
         $replacements = false,
-        $template_directory = false,
-        $line_prefix = false,
-        $indentation_unit = false,
-        $tag_prefix = false,
-        $tag_postfix = false
+        $templateDirectory = false,
+        $linePrefix = false,
+        $indentationUnit = false,
+        $tagPrefix = false,
+        $tagPostfix = false
     ) {
         return $this->reset(
             $template,
             $replacements,
-            $template_directory,
-            $line_prefix,
-            $indentation_unit,
-            $tag_prefix,
-            $tag_postfix
+            $templateDirectory,
+            $linePrefix,
+            $indentationUnit,
+            $tagPrefix,
+            $tagPostfix
         );
     }
 
     public function reset(
         $template = '',
         $replacements = false,
-        $template_directory = false,
-        $line_prefix = false,
-        $indentation_unit = false,
-        $tag_prefix = false,
-        $tag_postfix = false
+        $templateDirectory = false,
+        $linePrefix = false,
+        $indentationUnit = false,
+        $tagPrefix = false,
+        $tagPostfix = false
     ) {
         $this->setTemplate($template);
         if ($replacements) {
             $this->replacements = $replacements;
         }
-        if ($template_directory) {
-            self::$template_directory = $template_directory;
+        if ($templateDirectory) {
+            self::$templateDirectory = $templateDirectory;
+            self::$template_directory = $templateDirectory;
         }
-        if ($line_prefix) {
-            $this->line_prefix = $line_prefix;
+        if ($linePrefix) {
+            $this->linePrefix = $linePrefix;
+            $this->line_prefix = $linePrefix;
         }
-        if ($indentation_unit) {
-            $this->indentation_unit = $indentation_unit;
+        if ($indentationUnit) {
+            $this->indentationUnit = $indentationUnit;
+            $this->indentation_unit = $indentationUnit;
         }
 
         return true;
@@ -85,40 +109,52 @@ class ContentBuilder
 
     public static function getSitesketchPath()
     {
-        if (self::$sitesketch_path) {
-            return self::$sitesketch_path;
+        $path = self::$sitesketchPath ?? self::$sitesketch_path;
+        if ($path) {
+            return $path;
         }
 
         // What is the directory of the Sitesketch package root?
-        self::$sitesketch_path = dirname(__DIR__);
+        $path = dirname(__DIR__);
+        self::$sitesketchPath = $path;
+        self::$sitesketch_path = $path;
 
-        return self::$sitesketch_path;
+        return $path;
     }
 
     public static function getSitePath()
     {
-
-        if (isset(self::$site_path) && strlen(self::$site_path)) {
-            return self::$site_path;
+        $sitePath = self::$sitePath ?? self::$site_path;
+        if (isset($sitePath) && strlen($sitePath)) {
+            return $sitePath;
         }
+
+        $webDir = self::$webDirectory ?? self::$web_directory;
 
         // Attempt to use the first web directory on current path, otherwise use the web ("document") root
-        $web_pos = strrpos($_SERVER['SCRIPT_FILENAME'], self::$web_directory);
-        if ($web_pos !== false) {
-            self::$site_web_path = substr($_SERVER['SCRIPT_FILENAME'], 0, $web_pos + strlen(self::$web_directory));
+        $webPos = isset($_SERVER['SCRIPT_FILENAME']) ? strrpos($_SERVER['SCRIPT_FILENAME'], $webDir) : false;
+        if ($webPos !== false && isset($_SERVER['SCRIPT_FILENAME'])) {
+            $siteWebPath = substr($_SERVER['SCRIPT_FILENAME'], 0, $webPos + strlen($webDir));
         } elseif (isset($_SERVER['DOCUMENT_ROOT'])) {
-            self::$site_web_path = $_SERVER['DOCUMENT_ROOT'];
+            $siteWebPath = $_SERVER['DOCUMENT_ROOT'];
+        } else {
+            $siteWebPath = '';
         }
 
-        // Usually site path is one directory up from the site web path
-        self::$site_path = dirname(self::$site_web_path);
+        self::$siteWebPath = $siteWebPath;
+        self::$site_web_path = $siteWebPath;
 
-        return self::$site_path;
+        // Usually site path is one directory up from the site web path
+        $sitePath = dirname($siteWebPath);
+        self::$sitePath = $sitePath;
+        self::$site_path = $sitePath;
+
+        return $sitePath;
     }
 
     public static function getTemplateExtension()
     {
-        return self::$template_extension;
+        return self::$templateExtension ?? self::$template_extension;
     }
 
     public function setTemplate($template)
@@ -127,32 +163,34 @@ class ContentBuilder
             return false;
         }
 
-        $template = str_replace('.' . self::$template_extension . '.' . self::$template_extension, '.'
-            . self::$template_extension, $template);
+        $ext = self::getTemplateExtension();
+        $template = str_replace('.' . $ext . '.' . $ext, '.' . $ext, $template);
 
+        $this->hasPlacedReplacements = false;
         $this->has_placed_replacements = false;
 
-        $filepaths_to_try =
-        [
+        $templateDir = self::$templateDirectory ?? self::$template_directory;
+
+        $filepathsToTry = [
             $template,
             self::getSitePath() . '/' . $template,
-            self::getSitePath() . '/' . self::$template_directory . '/' . $template,
+            self::getSitePath() . '/' . $templateDir . '/' . $template,
             self::getSitePath() . '/templates/' . $template,
             self::getSitesketchPath() . '/resources/' . $template,
-            self::getSitesketchPath() . '/resources/' . self::$template_directory . '/' . $template,
-            self::getSitesketchPath() . '/resources/templates/' . $template
+            self::getSitesketchPath() . '/resources/' . $templateDir . '/' . $template,
+            self::getSitesketchPath() . '/resources/templates/' . $template,
         ];
 
-        $template_found = false;
-        foreach ($filepaths_to_try as $fi => $filepath) {
+        $templateFound = false;
+        foreach ($filepathsToTry as $filepath) {
             if (is_file($filepath)) {
                 $this->template = $filepath;
-                $template_found = true;
+                $templateFound = true;
                 break;
             }
         }
 
-        if (!$template_found) {
+        if (!$templateFound) {
             $this->errors[] = 'The template file: "' . $template . '" could not be found. Path is: '
                 . get_include_path();
         }
@@ -162,18 +200,23 @@ class ContentBuilder
 
     public function useSmartIndentation($use = true)
     {
+        $this->useSmartIndentation = $use;
         $this->use_smart_indentation = $use;
     }
 
     public function adjustIndentation($amount = false)
     {
+        $indentUnit = $this->indentationUnit ?? $this->indentation_unit ?? self::$indentationUnit;
+        $linePrefix = $this->linePrefix ?? $this->line_prefix ?? '';
 
         if ($amount > 0) {
-            $this->line_prefix = str_pad($this->line_prefix, $amount, $this->indentation_unit, STR_PAD_LEFT);
+            $this->linePrefix = str_pad($linePrefix, (int)$amount, $indentUnit, STR_PAD_LEFT);
+            $this->line_prefix = $this->linePrefix;
         } elseif ($amount < 0) {
-            $this->line_prefix = str_replace($this->indentation_unit, '', $this->line_prefix, $amount);
+            $this->linePrefix = str_replace($indentUnit, '', $linePrefix, $amount);
+            $this->line_prefix = $this->linePrefix;
         } else {
-            return preg_match_all('/' . $this->indentation_unit . '/', $this->line_prefix);
+            return preg_match_all('/' . $indentUnit . '/', $linePrefix);
         }
     }
 
@@ -203,15 +246,18 @@ class ContentBuilder
             $template = $this->template;
         }
 
-        // Determine if the template param is a filename,
-        $is_filename = false;
-
-        // Does the template have a template extension in it and are there no < ? Then is must be a filename
-        if (strpos($template, '.' . self::$template_extension) && strpos($template, '<') === false) {
-            $is_filename = true;
+        if (empty($template) || !is_string($template)) {
+            return (string)$template;
         }
 
-        if ($is_filename) {
+        $isFilename = false;
+        $ext = self::getTemplateExtension();
+
+        if (strpos($template, '.' . $ext) && strpos($template, '<') === false) {
+            $isFilename = true;
+        }
+
+        if ($isFilename) {
             return $this->loadTemplateContent($template);
         } else {
             return $template;
@@ -224,7 +270,7 @@ class ContentBuilder
             $template = $this->template;
         }
 
-        $template_content = $this->getTemplateContent($template);
+        $templateContent = $this->getTemplateContent($template);
 
         if (!$replacements || !is_array($replacements)) {
             if (isset($this->replacements) && is_array($this->replacements)) {
@@ -234,174 +280,172 @@ class ContentBuilder
             }
         }
 
-        $content = $template_content;
+        $content = $templateContent;
+
+        $tagOpenPrefix = self::$tagOpenPrefix ?? self::$tag_open_prefix;
+        $tagBang = self::$tagBang ?? self::$tag_bang;
+        $tagOpenPostfix = self::$tagOpenPostfix ?? self::$tag_open_postfix;
+        $tagClosePrefix = self::$tagClosePrefix ?? self::$tag_close_prefix;
+        $tagClosePostfix = self::$tagClosePostfix ?? self::$tag_close_postfix;
+        $tagPrefix = self::$tagPrefix ?? self::$tag_prefix;
+        $tagPostfix = self::$tagPostfix ?? self::$tag_postfix;
+        $endOfLine = self::$endOfLine ?? self::$end_of_line;
+        $indentationUnit = self::$indentationUnit ?? self::$indentation_unit;
+        $removeLeftoverTags = $this->removeLeftoverTags ?? $this->remove_leftover_tags;
+        $useSmartIndentation = $this->useSmartIndentation ?? $this->use_smart_indentation;
 
         // Find regular tags
-        $pattern = '/' . self::$tag_open_prefix . '(' . self::$tag_bang . '?[A-z0-9,_]+)' . self::$tag_open_postfix
-            . '/';
-        $match_count = preg_match_all($pattern, $content, $matches);
+        $pattern = '/' . $tagOpenPrefix . '(' . $tagBang . '?[A-z0-9,_]+)' . $tagOpenPostfix . '/';
+        $matchCount = preg_match_all($pattern, $content, $matches);
 
-        if ($match_count) {
-            $embed_tags = $matches[1];
+        if ($matchCount) {
+            $embedTags = $matches[1];
         } else {
-            $embed_tags = [];
+            $embedTags = [];
         }
 
-        $leftover_embed_tags = [];
+        $leftoverEmbedTags = [];
 
         if (isset($replacements) && is_array($replacements)) {
-            foreach ($embed_tags as $embed_tag_index => $tag) {
-                $no_bang_tag = $tag;
+            foreach ($embedTags as $embedTagIndex => $tag) {
+                $noBangTag = $tag;
 
-                if (strpos($tag, self::$tag_bang) !== false) {
-                    // Dealing with an embed tag with a bang
+                if (strpos($tag, $tagBang) !== false) {
+                    $noBangTag = substr($tag, strlen($tagBang));
 
-                    $no_bang_tag = substr($tag, strlen(self::$tag_bang));
-
-                    if (
-                        !isset($replacements[$no_bang_tag])
-                        || !$replacements[$no_bang_tag]
-                    ) {
+                    if (!isset($replacements[$noBangTag]) || !$replacements[$noBangTag]) {
                         $replacements[$tag] = $replacements;
                     }
                 } else {
-                    // No bang
-                    if ($this->remove_leftover_tags && !in_array($tag, array_keys($replacements))) {
+                    if ($removeLeftoverTags && !in_array($tag, array_keys($replacements))) {
                         $replacements[$tag] = '';
                     }
                 }
 
-                if (in_array($no_bang_tag, array_keys($replacements))) {
+                if (in_array($noBangTag, array_keys($replacements))) {
                     $value = false;
                     if (isset($replacements[$tag])) {
                         $value = $replacements[$tag];
                     }
 
-                    // If we are dealing with an array (we should be), merge the original replacements to each element
                     if (is_array($value)) {
                         foreach ($value as $vi => $vv) {
                             if (is_array($vv)) {
                                 $value[$vi] = array_merge($replacements, $vv);
                             } else {
-                                $original_vv = $vv;
+                                $originalVv = $vv;
                                 $vv = $replacements;
-                                $vv[] = $original_vv;
+                                $vv[] = $originalVv;
                             }
                         }
                     }
 
-                    // Here we recursively call this function with the inside of the no_bang_tag(s) that match(es)
-
-                    // What do the no_bang_tags look like?
-                    $open_tag = self::$tag_open_prefix . $tag . self::$tag_open_postfix;
-                    $close_tag = self::$tag_close_prefix . $tag . self::$tag_close_postfix;
+                    $openTag = $tagOpenPrefix . $tag . $tagOpenPostfix;
+                    $closeTag = $tagClosePrefix . $tag . $tagClosePostfix;
 
                     $offset = 0;
-                    $cut_start = strpos($content, $open_tag, $offset);
-                    while ($offset < strlen($content) && $cut_start !== false) {
-                        $offset = $cut_start + strlen($open_tag);
-                        $cut_end = strpos($content, $close_tag, $offset);
-                        if ($cut_end !== false) {
-                            $offset = $cut_end + strlen($close_tag);
-                            $embed_template = substr(
+                    $cutStart = strpos($content, $openTag, $offset);
+                    while ($offset < strlen($content) && $cutStart !== false) {
+                        $offset = $cutStart + strlen($openTag);
+                        $cutEnd = strpos($content, $closeTag, $offset);
+                        if ($cutEnd !== false) {
+                            $offset = $cutEnd + strlen($closeTag);
+                            $embedTemplate = substr(
                                 $content,
-                                ($cut_start + strlen($open_tag)),
-                                ($cut_end - ($cut_start + strlen($open_tag)))
+                                ($cutStart + strlen($openTag)),
+                                ($cutEnd - ($cutStart + strlen($openTag)))
                             );
 
-                            $filled_template = '';
+                            $filledTemplate = '';
 
-                            $content_to_replace = substr(
+                            $contentToReplace = substr(
                                 $content,
-                                $cut_start,
-                                ($cut_end + strlen($close_tag) - $cut_start)
+                                $cutStart,
+                                ($cutEnd + strlen($closeTag) - $cutStart)
                             );
 
                             if (is_array($value)) {
-                                $is_array_numeric = true;
-                                // How to test if array is numeric?
+                                $isArrayNumeric = true;
                                 foreach (array_keys($value) as $key) {
                                     if (!is_numeric($key)) {
-                                        $is_array_numeric = false;
+                                        $isArrayNumeric = false;
                                     }
                                 }
 
-                                if ($is_array_numeric) {
+                                if ($isArrayNumeric) {
                                     reset($value);
-                                    $first_key = key($value);
+                                    $firstKey = key($value);
                                     if (
-                                        !empty($first_key)
-                                        && !empty($value[$first_key])
-                                        && !is_array($value[$first_key])
+                                        !empty($firstKey)
+                                        && !empty($value[$firstKey])
+                                        && !is_array($value[$firstKey])
                                     ) {
-                                        if (self::$singularize_plural_magic_keys) {
-                                            $new_key = self::singularize($tag);
+                                        $magic = self::$singularizePluralMagicKeys
+                                            ?? self::$singularize_plural_magic_keys;
+                                        if ($magic) {
+                                            $newKey = self::singularize($tag);
                                         } else {
-                                            $new_key = $tag;
+                                            $newKey = $tag;
                                         }
-                                        $new_value = [];
-                                        foreach ($value as $temp_index => $embed_replacements) {
-                                            $new_value[$temp_index] = [$new_key => $embed_replacements];
+                                        $newValue = [];
+                                        foreach ($value as $tempIndex => $embedReplacements) {
+                                            $newValue[$tempIndex] = [$newKey => $embedReplacements];
                                         }
-                                        $value = $new_value;
-                                        unset($new_value);
+                                        $value = $newValue;
+                                        unset($newValue);
                                     }
-                                    foreach ($value as $temp_index => $embed_replacements) {
-                                        if (!array_key_exists('index', $embed_replacements)) {
-                                            $embed_replacements['index'] = $temp_index;
+                                    foreach ($value as $tempIndex => $embedReplacements) {
+                                        if (!array_key_exists('index', $embedReplacements)) {
+                                            $embedReplacements['index'] = $tempIndex;
                                         }
 
-                                        $filled_template .=
-                                            $this->getTemplateWithReplacementsContent(
-                                                $embed_template,
-                                                $embed_replacements
-                                            );
+                                        $filledTemplate .= $this->getTemplateWithReplacementsContent(
+                                            $embedTemplate,
+                                            $embedReplacements
+                                        );
                                     }
                                 } else {
-                                    $filled_template = $this->getTemplateWithReplacementsContent(
-                                        $embed_template,
+                                    $filledTemplate = $this->getTemplateWithReplacementsContent(
+                                        $embedTemplate,
                                         $value
                                     );
                                 }
                             } else {
-                                // The value associated is not an array
                                 if ($value) {
-                                    // Use the whole current set of replacements
-                                    $filled_template = $this->getTemplateWithReplacementsContent(
-                                        $embed_template,
+                                    $filledTemplate = $this->getTemplateWithReplacementsContent(
+                                        $embedTemplate,
                                         $replacements
                                     );
                                 }
                             }
 
-                            $content = str_replace($content_to_replace, $filled_template, $content);
+                            $content = str_replace($contentToReplace, $filledTemplate, $content);
                         }
 
                         if ($offset < strlen($content)) {
-                            $cut_start = strpos($content, $open_tag, $offset);
+                            $cutStart = strpos($content, $openTag, $offset);
                         } else {
-                            $cut_start = false;
+                            $cutStart = false;
                         }
                     }
                 } else {
-                    $leftover_embed_tags[] = $tag;
+                    $leftoverEmbedTags[] = $tag;
                 }
             }
 
             // Now do the regular tags ...
-            $pattern = '/' . self::$tag_prefix . '([A-z0-9,_]+)' . self::$tag_postfix . '/';
+            $pattern = '/' . $tagPrefix . '([A-z0-9,_]+)' . $tagPostfix . '/';
+            $matchCount = preg_match_all($pattern, $content, $matches);
 
-            $match_count = preg_match_all($pattern, $content, $matches);
-
-            if ($match_count) {
-                $replacement_tags = $matches[1];
+            if ($matchCount) {
+                $replacementTags = $matches[1];
             } else {
-                $replacement_tags = [];
+                $replacementTags = [];
             }
 
-            foreach ($replacement_tags as $tag) {
+            foreach ($replacementTags as $tag) {
                 if (
-                    $this->remove_leftover_tags
+                    $removeLeftoverTags
                     && (!isset($replacements[$tag])
                     || !in_array($tag, array_keys($replacements))
                     || $replacements[$tag] === null)
@@ -413,95 +457,96 @@ class ContentBuilder
                     $value = $replacements[$tag];
 
                     if (is_array($value)) {
-                        $new_value = '';
+                        $newValue = '';
 
                         if (count($value)) {
-                            $temp_keys = array_keys($value);
-                            if (is_array($value[$temp_keys[0]])) {
+                            $tempKeys = array_keys($value);
+                            if (is_array($value[$tempKeys[0]])) {
                                 foreach ($value as $v) {
-                                    $new_value .= $v;
+                                    $newValue .= $v;
                                 }
                             }
                         } else {
-                            $new_value = implode(', ', $value);
+                            $newValue = implode(', ', $value);
                         }
-                        $value = $new_value;
+                        $value = $newValue;
                     }
 
-                    if (is_string($value) && substr_count($value, self::$end_of_line)) {
-                        $delete_end_characters = [' ', "\n", "\r", "\t"];
-                        $cutoff_pos = strlen($value) - 1;
+                    if (is_string($value) && substr_count($value, $endOfLine)) {
+                        $deleteEndCharacters = [' ', "\n", "\r", "\t"];
+                        $cutoffPos = strlen($value) - 1;
                         if (strlen(trim($value))) {
-                            while (in_array(substr($value, $cutoff_pos, 1), $delete_end_characters)) {
-                                $cutoff_pos--;
+                            while (in_array(substr($value, $cutoffPos, 1), $deleteEndCharacters)) {
+                                $cutoffPos--;
                             }
-                            $value = substr($value, 0, $cutoff_pos + 1);
+                            $value = substr($value, 0, $cutoffPos + 1);
                         }
 
-                        if ($this->use_smart_indentation) {
+                        if ($useSmartIndentation) {
                             $offset = 0;
-                            while ($offset < strlen($content) && $cut_start = strpos($content, $tag, $offset)) {
-                                $offset = $cut_start + strlen($tag);
+                            while ($offset < strlen($content) && $cutStart = strpos($content, $tag, $offset)) {
+                                $offset = $cutStart + strlen($tag);
 
-                                $indentation_end = $cut_start - 1;
-                                if ($indentation_end > 0) {
-                                    $indentation_offset = -(strlen($content) - ($indentation_end));
+                                $indentationEnd = $cutStart - 1;
+                                if ($indentationEnd > 0) {
+                                    $indentationOffset = -(strlen($content) - ($indentationEnd));
 
-                                    $indentation_start = strrpos($content, self::$end_of_line, $indentation_offset)
-                                        + strlen(self::$end_of_line);
-                                    $indentation_material = substr(
+                                    $indentationStart = strrpos($content, $endOfLine, $indentationOffset)
+                                        + strlen($endOfLine);
+                                    $indentationMaterial = substr(
                                         $content,
-                                        $indentation_start,
-                                        ($indentation_end - $indentation_start)
+                                        $indentationStart,
+                                        ($indentationEnd - $indentationStart)
                                     );
-                                    $indentation_level = substr_count($indentation_material, self::$indentation_unit);
+                                    $indentationLevel = substr_count($indentationMaterial, $indentationUnit);
 
                                     if (
-                                        $indentation_level * strlen(self::$indentation_unit)
-                                        == strlen($indentation_material)
+                                        $indentationLevel * strlen($indentationUnit)
+                                        == strlen($indentationMaterial)
                                     ) {
-                                        $value = str_replace(self::$end_of_line, self::$end_of_line
-                                            . $indentation_material, $value);
+                                        $value = str_replace(
+                                            $endOfLine,
+                                            $endOfLine . $indentationMaterial,
+                                            $value
+                                        );
                                     }
                                 }
                             }
                         }
                     }
 
-                    // TODO? Something better with bools and ints?
                     if (is_bool($value) || is_int($value)) {
                         $value = (string) $value;
                     }
 
-                    $content = str_replace(self::$tag_prefix . $tag . self::$tag_postfix, $value, $content);
+                    $content = str_replace($tagPrefix . $tag . $tagPostfix, $value, $content);
                 }
             }
         }
 
         // Find eval tags
-        $pattern = '/' . str_replace(['(',')'], ['\(','\)'], $this->eval_open_tag) . '(.+?)'
-            . str_replace(['(',')'], ['\(','\)'], $this->eval_close_tag) . '/';
-        $match_count = preg_match_all($pattern, $content, $matches);
+        $evalOpen = $this->evalOpenTag ?? $this->eval_open_tag;
+        $evalClose = $this->evalCloseTag ?? $this->eval_close_tag;
 
-        if ($match_count) {
-            $to_replace = $matches[0];
-            $to_evaluate = $matches[1];
+        $pattern = '/' . str_replace(['(', ')'], ['\(', '\)'], $evalOpen) . '(.+?)'
+            . str_replace(['(', ')'], ['\(', '\)'], $evalClose) . '/';
+        $matchCount = preg_match_all($pattern, $content, $matches);
 
-            foreach ($to_evaluate as $index => $te) {
+        if ($matchCount) {
+            $toReplace = $matches[0];
+            $toEvaluate = $matches[1];
+
+            foreach ($toEvaluate as $index => $te) {
                 $te = $this->getTemplateWithReplacementsContent($te, $replacements);
 
-                // Now replace tags on the "expression" inside the eval tags
+                $tempResult = '';
+                eval('$tempResult = (' . $te . ');');
 
-                $temp_result = '';
-                eval('$temp_result = (' . $te . ');');
-
-                // Now evaluate the expression
-                $content = str_replace($to_replace[$index], $temp_result, $content);
+                $content = str_replace($toReplace[$index], (string)$tempResult, $content);
             }
-        } else {
-            $eval_tags = [];
         }
 
+        $this->hasPlacedReplacements = true;
         $this->has_placed_replacements = true;
 
         return $content;
@@ -513,21 +558,21 @@ class ContentBuilder
             return $this->content;
         }
 
-        $needs_reset = false;
+        $needsReset = false;
 
         if (!$template) {
             $template = $this->template;
         } else {
-            $needs_reset = true;
+            $needsReset = true;
         }
 
         if (!$replacements) {
             $replacements = $this->replacements;
         } else {
-            $needs_reset = true;
+            $needsReset = true;
         }
 
-        if ($needs_reset) {
+        if ($needsReset) {
             $this->reset($template, $replacements);
             $template = $this->template;
             $replacements = $this->replacements;
@@ -542,15 +587,14 @@ class ContentBuilder
         return $content;
     }
 
-    public function loadTemplateContent($filepath, $template_directory = false)
+    public function loadTemplateContent($filepath, $templateDirectory = false)
     {
-        // Fix the filename?
         if (!is_file($filepath)) {
-            if (!$template_directory) {
-                $template_directory = self::$template_directory;
+            if (!$templateDirectory) {
+                $templateDirectory = self::$templateDirectory ?? self::$template_directory;
             }
-            if (is_file(($template_directory ? $template_directory . '/' : '') . $filepath)) {
-                $filepath = ($template_directory ? $template_directory . '/' : '') . $filepath;
+            if (is_file(($templateDirectory ? $templateDirectory . '/' : '') . $filepath)) {
+                $filepath = ($templateDirectory ? $templateDirectory . '/' : '') . $filepath;
             }
         }
 
@@ -616,16 +660,16 @@ class ContentBuilder
             'move' => 'moves'
         ];
 
-        $lowercased_word = strtolower($word);
-        foreach ($uncountable as $_uncountable) {
-            if (substr($lowercased_word, (-1 * strlen($_uncountable))) == $_uncountable) {
+        $lowercasedWord = strtolower($word);
+        foreach ($uncountable as $item) {
+            if (substr($lowercasedWord, (-1 * strlen($item))) == $item) {
                 return $word;
             }
         }
 
-        foreach ($irregular as $_plural => $_singular) {
-            if (preg_match('/(' . $_singular . ')$/i', $word, $arr)) {
-                return preg_replace('/(' . $_singular . ')$/i', substr($arr[0], 0, 1) . substr($_plural, 1), $word);
+        foreach ($irregular as $plural => $sing) {
+            if (preg_match('/(' . $sing . ')$/i', $word, $arr)) {
+                return preg_replace('/(' . $sing . ')$/i', substr($arr[0], 0, 1) . substr($plural, 1), $word);
             }
         }
 
