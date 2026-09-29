@@ -4,7 +4,7 @@
 	}metas~
 	<title>~title~</title>
 	~icon{
-	<link rel="shortcut icon" href="~icon~" type="image/x-icon" /> 
+	<link rel="shortcut icon" href="~icon~" type="image/x-icon" />
 	<link rel="icon" href="~icon~" type="image/x-icon" />
 	}icon~
 	~stylesheets{
@@ -13,5 +13,5 @@
 	~scripts{
 	<script ~language{ language="~language~"}language~type="~type~"~src{ src="~src~"}src~~script_extra{ ~script_extra~}script_extra~>~inside~</script>
 	}scripts~
-	~extra~
+	~head_extra~
 </head>

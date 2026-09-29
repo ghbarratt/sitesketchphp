@@ -699,7 +699,7 @@ class PageBuilder
             $replacements['metas'] = $metas;
         }
         if ($headExtra) {
-            $replacements['extra'] = $headExtra;
+            $replacements['head_extra'] = $headExtra;
         }
 
         return $this->cb->getContent($template, $replacements);
