@@ -1,6 +1,6 @@
 <head>
 	~metas{
-	<meta ~attribute~="~attribute_value~" content="~content~" />
+	<meta ~attribute~="~attribute_value~"~content{ content="~content~"}content~ />
 	}metas~
 	<title>~title~</title>
 	~icon{

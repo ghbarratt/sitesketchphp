@@ -34,7 +34,6 @@ class PageBuilder
     protected $description;
     protected $keywords;
     protected $doctypeAlias;
-    protected $doctype_alias;
     protected $uri;
     protected $templates;
     protected $stylesheets;
@@ -264,7 +263,7 @@ class PageBuilder
         string|null $alias = null,
         string|null $description = null,
         array|string|null $keywords = null,
-        string|null $contentType = null
+        string|null $charset = null
     ) {
         if (empty($alias)) {
             $alias = $this->getAlias();
@@ -292,8 +291,8 @@ class PageBuilder
             }
         }
 
-        if (empty($contentType)) {
-            $contentType = $this->getContentType();
+        if (empty($charset)) {
+            $charset = 'UTF-8';
         }
 
         if (!empty($this->metas) && count($this->metas)) {
@@ -301,8 +300,9 @@ class PageBuilder
         } else {
             $metas = [];
         }
-        if (!empty($contentType)) {
-            $metas[] = ['attribute' => 'http-equiv', 'attribute_value' => 'content-type', 'content' => $contentType];
+
+        if (!empty($charset)) {
+            $metas[] = ['attribute' => 'charset', 'attribute_value' => $charset];
         }
 
         if (!empty($description)) {
@@ -351,11 +351,10 @@ class PageBuilder
 
     public function getDefaultReplacements()
     {
-        $doctypeAlias = $this->doctypeAlias ?? $this->doctype_alias;
         return [
             'alias' => $this->getAlias(),
             'type' => $this->type,
-            'doctype_alias' => $doctypeAlias,
+            'doctype_alias' => $this->getDoctypeAlias(),
             'this_year' => date('Y'),
         ];
     }
@@ -450,7 +449,6 @@ class PageBuilder
     public function setDoctypeAlias($doctypeAlias)
     {
         $this->doctypeAlias = $doctypeAlias;
-        $this->doctype_alias = $doctypeAlias;
 
         return $doctypeAlias;
     }
@@ -462,44 +460,11 @@ class PageBuilder
 
     public function getDoctypeAlias()
     {
-        $doctypeAlias = $this->doctypeAlias ?? $this->doctype_alias;
-        if ($doctypeAlias) {
-            return $doctypeAlias;
+        if (!empty($this->doctypeAlias)) {
+            return $this->doctypeAlias;
         } else {
-            return 'xhtml1_transitional';
+            return 'html';
         }
-    }
-
-    public function getContentType($doctypeAlias = false)
-    {
-        if (!$doctypeAlias) {
-            $doctypeAlias = $this->getDoctypeAlias();
-        }
-
-        switch ($doctypeAlias) {
-            case 'html':
-            case 'html_transitional':
-            case 'html_loose':
-            case 'html_4':
-            case 'html_4_transitional':
-            case 'html_4_loose':
-            case 'html_4.01':
-            case 'html_4.01_transitional':
-            case 'html_4.01_loose':
-            case 'html4':
-            case 'html4_transitional':
-            case 'html4_loose':
-            case 'html4.01':
-            case 'html4.01_transitional':
-            case 'html4.01_loose':
-                $contentType = 'text/html; charset=iso-8859-1';
-                break;
-            default:
-                $contentType = 'text/html; charset=utf-8';
-                break;
-        }
-
-        return $contentType;
     }
 
     public function getDTDContent(string|null $alias = null, string|null $doctypeAlias = null)
@@ -530,7 +495,6 @@ class PageBuilder
                 $declaration = ' "-//W3C//DTD HTML 4.01 Transitional//EN"';
                 $link = ' "http://www.w3.org/TR/html4/loose.dtd"';
                 $this->doctypeAlias = 'html4_transitional';
-                $this->doctype_alias = 'html4_transitional';
                 break;
             case 'html_strict':
             case 'html_4_strict':
@@ -541,7 +505,6 @@ class PageBuilder
                 $declaration = ' "-//W3C//DTD HTML 4.01//EN"';
                 $link = ' "http://www.w3.org/TR/html4/strict.dtd"';
                 $this->doctypeAlias = 'html4_strict';
-                $this->doctype_alias = 'html4_strict';
                 break;
             case 'xhtml_strict':
             case 'xhtml_1_strict':
@@ -552,7 +515,6 @@ class PageBuilder
                 $declaration = ' "-//W3C//DTD XHTML 1.0 Strict//EN"';
                 $link = ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"';
                 $this->doctypeAlias = 'xhtml1_strict';
-                $this->doctype_alias = 'xhtml1_strict';
                 break;
             case 'xhtml_transitional':
             case 'xhtml_1_transitional':
@@ -563,14 +525,14 @@ class PageBuilder
                 $declaration = ' "-//W3C//DTD XHTML 1.0 Transitional//EN"';
                 $link = ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"';
                 $this->doctypeAlias = 'xhtml1_transitional';
-                $this->doctype_alias = 'xhtml1_transitional';
                 break;
-            default: // default is HTML 5
+            case 'html':
+            case 'html5':
+            case 'html_5':
+            default:
                 $access = '';
                 $declaration = '';
                 $link = '';
-                $this->doctypeAlias = 'html5';
-                $this->doctype_alias = 'html5';
                 break;
         }
 
@@ -834,11 +796,8 @@ class PageBuilder
         if (empty($alias)) {
             $alias = $this->getAlias();
         }
-        $doctypeAlias = $this->doctypeAlias ?? $this->doctype_alias;
-        if (empty($doctypeAlias)) {
-            $doctypeAlias = $this->getDoctypeAlias();
-            $this->doctypeAlias = $doctypeAlias;
-            $this->doctype_alias = $doctypeAlias;
+        if (empty($this->doctypeAlias)) {
+            $this->doctypeAlias = $this->getDoctypeAlias();
         }
 
         $replacements = [
@@ -848,8 +807,8 @@ class PageBuilder
             'body' => $this->getBodyContent($alias),
         ];
 
-        if (stripos($doctypeAlias, 'xhtml') !== false) {
-            $replacements['attributes'] .= 'xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"';
+        if (stripos($this->doctypeAlias, 'xhtml') !== false) {
+            $replacements['attributes'] .= 'xmlns="http://www.w3.org/1999/xhtml"';
         }
 
         $replacements = array_merge($replacements, $this->getReplacements());
