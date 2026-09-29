@@ -2,13 +2,7 @@
  *
  *   Color Utilities - non-intrusive script for color (parsing, converting, etc.)
  *
- *   Glen H. Barratt from AdeptSites ghbarratt [at] adeptsites [dot] com
- *   http://adeptsites.com
- *
- *   Get the updated version from adeptsites.com
- *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
 
 var ColorUtilities =
 {

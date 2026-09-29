@@ -111,82 +111,13 @@ if (!function_exists('isEmailValid')) {
     }
 }
 
-if (!function_exists('getContentFromFile')) {
-    function getContentFromFile($filename, $linePrefix = '')
-    {
-        $fileText = getTextFromFile($filename);
-        $content = '';
-
-        $fileLines = explode("\n", $fileText);
-        foreach ($fileLines as $line) {
-            $content .= $linePrefix . $line . "\n";
-        }
-
-        $replacements = [
-            'elevated' => [
-                'start_tag' => '<span type="elevated">',
-                'end_tag' => '</span>',
-                'function' => 'wrapElevatedContent',
-            ],
-            'quote' => [
-                'start_tag' => '<q>',
-                'end_tag' => '</q>',
-                'function' => 'wrapQuoteContent',
-            ],
-        ];
-
-        foreach ($replacements as $r) {
-            $startPosition = strpos($content, $r['start_tag']);
-
-            while ($startPosition !== false) {
-                $endPosition = strpos($content, $r['end_tag'], $startPosition);
-                if ($endPosition !== false) {
-                    $toReplace = substr(
-                        $content,
-                        $startPosition,
-                        (($endPosition + strlen($r['end_tag'])) - $startPosition)
-                    );
-                    $insideContent = substr(
-                        $content,
-                        $startPosition + strlen($r['start_tag']),
-                        ($endPosition - ($startPosition + strlen($r['start_tag'])))
-                    );
-                    $replaceWith = function_exists($r['function']) ?
-                        $r['function']($insideContent, $linePrefix)
-                        : $insideContent;
-                    $content = str_replace($toReplace, $replaceWith, $content);
-                }
-                $startPosition = strpos($content, $r['start_tag']);
-            }
-        }
-
-        return $content;
-    }
-}
-
-if (!function_exists('getTextFromFile')) {
-    function getTextFromFile($filename, $debugging = false)
-    {
-        $fileText = '';
-        $fileHandler = @fopen($filename, 'r');
-        if ($fileHandler) {
-            $fileText = fread($fileHandler, filesize($filename));
-            fclose($fileHandler);
-        } else {
-            $fileText = 'ERROR: fopen could not open ' . $filename . ".\n";
-        }
-
-        return $fileText;
-    }
-}
-
 if (!function_exists('adjustLinePrefix')) {
     function adjustLinePrefix($amount = 0)
     {
-        global $linePrefix, $line_prefix;
+        global $linePrefix;
 
         if (!isset($linePrefix)) {
-            $linePrefix = $line_prefix ?? "\t\t\t\t";
+            $linePrefix = "\t\t\t\t";
         }
 
         if (!is_int($amount)) {
@@ -206,22 +137,19 @@ if (!function_exists('adjustLinePrefix')) {
 }
 
 if (!function_exists('getButtonContent')) {
-    function getButtonContent($alias, $id, $link, $alt = '', $extra = '')
-    {
-        global $linePrefix, $line_prefix;
-
-        if (!isset($linePrefix)) {
-            $linePrefix = $line_prefix ?? "\t\t\t\t";
-        }
-
-        $content = $linePrefix . "<a href=\"" . $link . "\">\n";
-        $content .= $linePrefix . "\t<img src=\"/images/button_" . $alias . '_up.gif" alt="' . $alt . '" id="' . $id
-            . '" name="' . $id . '" onmouseover="changeImage(\'' . $id . '\', \'/images/button_' . $alias
-            . '_hover.gif\');" onmouseout="changeImage(\'' . $id . '\', \'/images/button_' . $alias
-            . '_up.gif\');" onmousedown="changeImage(\'' . $id . '\', \'/images/button_' . $alias
-            . '_down.gif\');" onmouseup="changeImage(\'' . $id . '\', \'/images/button_' . $alias . '_hover.gif\');" '
-            . $extra . ">\n";
-        $content .= $linePrefix . "</a>\n";
+    function getButtonContent(
+        string $alias,
+        string $id,
+        string $link,
+        string|null $alt = null,
+        string|null $extra = null
+    ): string {
+        $content = '<a href="' . $link . '">' . '<img src="/images/button_' . $alias . '_up.gif" alt="'
+            . $alt ?? $alias ?? '' . '" id="' . $id . '" name="' . $id . '" onmouseover="changeImage(\'' . $id
+            . "', '/images/button_" . $alias . '_hover.gif\');" onmouseout="changeImage(\'' . $id
+            . "', '/images/button_" . $alias . '_up.gif\');" onmousedown="changeImage(\'' . $id . "', '/images/button_"
+            . $alias . '_down.gif\');" onmouseup="changeImage(\'' . $id . "', '/images/button_" . $alias
+            . '_hover.gif\');" ' . $extra . '></a>';
 
         return $content;
     }
@@ -230,10 +158,10 @@ if (!function_exists('getButtonContent')) {
 if (!function_exists('getSelectInputContent')) {
     function getSelectInputContent($alias, $values, $labels = false, $default = false, $extraAttributes = '')
     {
-        global $linePrefix, $line_prefix;
+        global $linePrefix;
 
         if (!isset($linePrefix)) {
-            $linePrefix = $line_prefix ?? "\t\t\t\t";
+            $linePrefix = "\t\t\t\t";
         }
 
         if (!is_array($values)) {
@@ -278,10 +206,10 @@ if (!function_exists('getDropDownInputContent')) {
 if (!function_exists('getRadioInputContent')) {
     function getRadioInputContent($alias, $values, $labels = false, $default = false, $extraAttributes = '')
     {
-        global $linePrefix, $line_prefix;
+        global $linePrefix;
 
         if (!isset($linePrefix)) {
-            $linePrefix = $line_prefix ?? "\t\t\t\t";
+            $linePrefix = "\t\t\t\t";
         }
 
         if (!is_array($values)) {
@@ -316,10 +244,10 @@ if (!function_exists('getDateInputsContent')) {
         $format = false,
         $placeBaseInput = 'hidden'
     ) {
-        global $linePrefix, $line_prefix;
+        global $linePrefix;
 
         if (!$linePrefix) {
-            $linePrefix = $line_prefix ?? "\t\t\t\t";
+            $linePrefix = "\t\t\t\t";
         }
 
         if (isset($_POST[$alias]) && $_POST[$alias]) {
@@ -511,10 +439,10 @@ if (!function_exists('getDateInputsContent')) {
 if (!function_exists('getDOBInputsContent')) {
     function getDOBInputsContent($minAge = 0, $maxAge = 110)
     {
-        global $linePrefix, $line_prefix;
+        global $linePrefix;
 
         if (!$linePrefix) {
-            $linePrefix = $line_prefix ?? "\t\t\t\t";
+            $linePrefix = "\t\t\t\t";
         }
 
         $content = "<!-- DOB INPUTS START HERE -->\n";

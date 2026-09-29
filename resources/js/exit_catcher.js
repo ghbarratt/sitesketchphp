@@ -3,8 +3,6 @@
  *
  *   Exit Catcher - non-intrusive script for providing an exit catching
  *
- *   Glen H. Barratt 
- *
  *   Requires jQuery
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

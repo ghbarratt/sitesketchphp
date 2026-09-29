@@ -2,9 +2,6 @@
  *
  *   Image Rollovers - non-intrusive script for providing image rollovers
  *
- *   Glen H. Barratt from AdeptSites ghbarratt [at] adeptsites [dot] com
- *   http://adeptsites.com
- *
  *   Requires jQuery
  *   Requires URLUtilities
  *

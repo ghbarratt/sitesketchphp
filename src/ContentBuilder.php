@@ -41,7 +41,6 @@ class ContentBuilder
     protected static $tag_close_postfix = '~';
 
     public $linePrefix = '';
-    public $line_prefix = '';
     public $replacements;
     public $removeLeftoverTags = true;
     public $remove_leftover_tags = true;
@@ -97,7 +96,6 @@ class ContentBuilder
         }
         if ($linePrefix) {
             $this->linePrefix = $linePrefix;
-            $this->line_prefix = $linePrefix;
         }
         if ($indentationUnit) {
             $this->indentationUnit = $indentationUnit;
@@ -207,14 +205,12 @@ class ContentBuilder
     public function adjustIndentation($amount = false)
     {
         $indentUnit = $this->indentationUnit ?? $this->indentation_unit ?? self::$indentationUnit;
-        $linePrefix = $this->linePrefix ?? $this->line_prefix ?? '';
+        $linePrefix = $this->linePrefix ?? '';
 
         if ($amount > 0) {
             $this->linePrefix = str_pad($linePrefix, (int)$amount, $indentUnit, STR_PAD_LEFT);
-            $this->line_prefix = $this->linePrefix;
         } elseif ($amount < 0) {
             $this->linePrefix = str_replace($indentUnit, '', $linePrefix, $amount);
-            $this->line_prefix = $this->linePrefix;
         } else {
             return preg_match_all('/' . $indentUnit . '/', $linePrefix);
         }
