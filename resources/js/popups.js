@@ -2,9 +2,6 @@
  *
  *   Popups - non-intrusive script for providing popups
  *
- *   Glen H. Barratt from AdeptSites ghbarratt [at] adeptsites [dot] com
- *   http://adeptsites.com
- *
  *   Requires jQuery
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

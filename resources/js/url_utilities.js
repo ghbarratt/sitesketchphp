@@ -2,11 +2,6 @@
  *
  *   URL Utilities - non-intrusive script for manipulating and parsing urls
  *
- *   Glen H. Barratt from AdeptSites ghbarratt [at] adeptsites [dot] com
- *   http://adeptsites.com
- *
- *   INCOMPLETE OR IN DEVELOPMENT! Get the updated version from adeptsites.com
- *
  *   Requires jQuery
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

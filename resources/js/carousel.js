@@ -2,9 +2,6 @@
  *
  *   Carousel - non-instrusive script for providing a carousel
  *
- *   Glen H. Barratt from AdeptSites ghbarratt [at] adeptsites [dot] com
- *   http://adeptsites.com
- *
  *   Requires jQuery
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

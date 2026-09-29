@@ -3,14 +3,7 @@
 	 *                                                                                             *
 	 *  animation.js - a lightweight animation script                                              *
 	 *                                                                                             *
-	 *  By Glen H. Barratt                                                                         *
-	 *  ghbarratt (at) adeptsites.com                                                              *
-	 *                                                                                             *
-	 *  Get the latest version from adeptsites.com                                                 *
-	 *                                                                                             *
 	 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-
 
 	// GLOBALS
 

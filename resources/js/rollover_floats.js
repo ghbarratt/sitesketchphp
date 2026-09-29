@@ -2,9 +2,6 @@
  *
  *   Rollover Floats - non-intrusive script for providing rollover floats
  *
- *   Glen H. Barratt from AdeptSites ghbarratt [at] adeptsites [dot] com
- *   http://adeptsites.com
- *
  *   Requires jQuery
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
