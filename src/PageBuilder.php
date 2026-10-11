@@ -7,23 +7,14 @@ namespace Sitesketch;
 class PageBuilder
 {
     public static $siteKeywords;
-    public static $site_keywords;
     public static $siteDescription;
-    public static $site_description;
     public static $siteHeadExtra;
-    public static $site_head_extra;
     public static $sitePath;
-    public static $site_path;
     public static $siteAlias;
-    public static $site_alias;
     public static $siteTitle;
-    public static $site_title;
     public static $siteScripts;
-    public static $site_scripts;
     public static $siteStylesheets;
-    public static $site_stylesheets;
     public static $siteIcon;
-    public static $site_icon;
 
     public $alias;
     public $type = '';
@@ -40,18 +31,13 @@ class PageBuilder
     protected $scripts;
     protected $metas;
     protected $headExtra;
-    protected $head_extra;
     protected $bodyAttributes;
-    protected $body_attributes;
     protected $icon;
     protected $domain;
 
     protected $headerContent;
-    protected $header_content;
     protected $footerContent;
-    protected $footer_content;
     protected $bodyContent;
-    protected $body_content;
 
     protected $cb;
 
@@ -88,8 +74,8 @@ class PageBuilder
             $this->type = $type;
         }
 
-        $siteTitle = static::$siteTitle ?? static::$site_title;
-        $siteAlias = static::$siteAlias ?? static::$site_alias;
+        $siteTitle = static::$siteTitle;
+        $siteAlias = static::$siteAlias;
 
         if (!empty($title)) {
             $this->title = $title;
@@ -116,7 +102,6 @@ class PageBuilder
         if (empty($siteTitle) && !empty($siteAlias) && $siteAlias[0] != '_') {
             $siteTitle = ucwords(str_replace('_', ' ', $siteAlias));
             static::$siteTitle = $siteTitle;
-            static::$site_title = $siteTitle;
         }
 
         // Prepend the site title?
@@ -129,16 +114,15 @@ class PageBuilder
             $this->title = $siteTitle;
         }
 
-        $siteIcon = static::$siteIcon ?? static::$site_icon;
+        $siteIcon = static::$siteIcon;
         if (empty($siteIcon)) {
             if (is_file(($_SERVER['DOCUMENT_ROOT'] ?? '') . '/favicon.ico')) {
                 static::$siteIcon = '/favicon.ico';
-                static::$site_icon = '/favicon.ico';
             }
         }
 
         $this->stylesheets = null;
-        $siteStylesheets = static::$siteStylesheets ?? static::$site_stylesheets;
+        $siteStylesheets = static::$siteStylesheets;
         if (!empty($siteStylesheets)) {
             $this->stylesheets = $siteStylesheets;
         }
@@ -169,25 +153,22 @@ class PageBuilder
         }
 
         $this->headerContent = null;
-        $this->header_content = null;
         $this->footerContent = null;
-        $this->footer_content = null;
         $this->bodyContent = null;
-        $this->body_content = null;
     }
 
     public static function setSiteVariable(string $name, string|array $value): bool
     {
         $candidates = [];
         if (str_starts_with($name, 'site_')) {
-            $candidates[] = $name;
             $candidates[] = lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $name))));
+            $candidates[] = $name;
         } elseif (str_starts_with($name, 'site')) {
             $candidates[] = $name;
             $candidates[] = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $name));
         } else {
-            $candidates[] = 'site_' . $name;
             $candidates[] = 'site' . ucfirst($name);
+            $candidates[] = 'site_' . $name;
         }
 
         $matched = false;
@@ -205,13 +186,11 @@ class PageBuilder
     {
         if (!empty($siteAlias)) {
             static::$siteAlias = $siteAlias;
-            static::$site_alias = $siteAlias;
         } else {
             $host = $_SERVER['HTTP_HOST'] ?? '';
             $dotPos = strrpos($host, '.');
             $alias = str_replace('www.', '', $dotPos !== false ? substr($host, 0, $dotPos) : $host);
             static::$siteAlias = $alias;
-            static::$site_alias = $alias;
         }
 
         return static::$siteAlias;
@@ -271,7 +250,7 @@ class PageBuilder
         if (empty($description) && !empty($this->description)) {
             $description = $this->description;
         }
-        $siteDesc = static::$siteDescription ?? static::$site_description;
+        $siteDesc = static::$siteDescription;
         if (empty($description) && !empty($siteDesc)) {
             $description = $siteDesc;
         }
@@ -282,7 +261,7 @@ class PageBuilder
             }
         }
 
-        $siteKw = static::$siteKeywords ?? static::$site_keywords;
+        $siteKw = static::$siteKeywords;
         if (!empty($siteKw)) {
             if (is_array($keywords)) {
                 $keywords = array_merge($keywords, $siteKw);
@@ -329,7 +308,7 @@ class PageBuilder
 
     public function getHeadExtra()
     {
-        return $this->headExtra ?? $this->head_extra;
+        return $this->headExtra;
     }
 
     public function setKeywords(array|string $keywords)
@@ -340,13 +319,11 @@ class PageBuilder
     public function setHeadExtra($headExtra)
     {
         $this->headExtra = $headExtra;
-        $this->head_extra = $headExtra;
     }
 
     public function setBodyAttributes($bodyAttributes)
     {
         $this->bodyAttributes = $bodyAttributes;
-        $this->body_attributes = $bodyAttributes;
     }
 
     public function getDefaultReplacements()
@@ -460,10 +437,10 @@ class PageBuilder
 
     public function getDoctypeAlias()
     {
-        if (!empty($this->doctypeAlias)) {
+        if ($this->doctypeAlias) {
             return $this->doctypeAlias;
         } else {
-            return 'html';
+            return 'html5';
         }
     }
 
@@ -526,7 +503,6 @@ class PageBuilder
                 $link = ' "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"';
                 $this->doctypeAlias = 'xhtml1_transitional';
                 break;
-            case 'html':
             case 'html5':
             case 'html_5':
             default:
@@ -537,7 +513,7 @@ class PageBuilder
         }
 
         $templateExt = ContentBuilder::getTemplateExtension();
-        $templateDir = ContentBuilder::$templateDirectory ?? ContentBuilder::$template_directory;
+        $templateDir = ContentBuilder::$templateDirectory;
 
         if (isset($this->templates['dtd'])) {
             $template = $this->templates['dtd'];
@@ -562,7 +538,7 @@ class PageBuilder
             $scripts = $this->scripts;
         }
 
-        $siteScripts = static::$siteScripts ?? static::$site_scripts;
+        $siteScripts = static::$siteScripts;
         if (!empty($siteScripts) && is_array($siteScripts) && count($siteScripts)) {
             $scripts = array_merge($siteScripts, (is_array($scripts) ? $scripts : []));
         }
@@ -593,7 +569,7 @@ class PageBuilder
 
     public function getIcon(): string|false
     {
-        return $this->icon ?? static::$siteIcon ?? static::$site_icon ?? false;
+        return $this->icon ?? static::$siteIcon ?? false;
     }
 
     public function getHeadContent(
@@ -624,17 +600,15 @@ class PageBuilder
             $metas = $this->getMetas($alias);
         }
 
-        $currentHeadExtra = $this->headExtra ?? $this->head_extra;
-        if (isset($currentHeadExtra)) {
+        if (isset($this->headExtra)) {
             $headExtra .= $this->getHeadExtra();
         }
 
-        $siteHeadExtra = static::$siteHeadExtra ?? static::$site_head_extra;
-        if (!empty($siteHeadExtra)) {
-            $headExtra .= $siteHeadExtra;
+        if (!empty(static::$siteHeadExtra)) {
+            $headExtra .= static::$siteHeadExtra;
         }
 
-        $templateDir = ContentBuilder::$templateDirectory ?? ContentBuilder::$template_directory;
+        $templateDir = ContentBuilder::$templateDirectory;
         $templateExt = ContentBuilder::getTemplateExtension();
         $template = $templateDir . '/head.' . $templateExt;
         if (isset($this->templates['head'])) {
@@ -678,22 +652,20 @@ class PageBuilder
 
     public function getHeaderContent(string|null $alias = null, string|null $template = null): string
     {
-        $sitePath = static::$sitePath ?? static::$site_path;
+        $sitePath = static::$sitePath;
         if (empty($sitePath)) {
             $sitePath = ContentBuilder::getSitePath();
             static::$sitePath = $sitePath;
-            static::$site_path = $sitePath;
         }
 
-        $headerContent = $this->headerContent ?? $this->header_content;
-        if (!empty($headerContent)) {
-            return $headerContent;
+        if (!empty($this->headerContent)) {
+            return $this->headerContent;
         }
 
         if (empty($alias)) {
             $alias = $this->getAlias();
         }
-        $templateDir = ContentBuilder::$templateDirectory ?? ContentBuilder::$template_directory;
+        $templateDir = ContentBuilder::$templateDirectory;
         $templateExt = ContentBuilder::getTemplateExtension();
         if (empty($template)) {
             $template = $sitePath . $templateDir . '/'
@@ -706,30 +678,27 @@ class PageBuilder
             $this->cb->reset($template, $replacements);
 
             $this->headerContent = $this->cb->getContent();
-            $this->header_content = $this->headerContent;
         }
 
-        return $this->headerContent ?? $this->header_content ?? '';
+        return $this->headerContent ?? '';
     }
 
     public function getFooterContent(string|null $alias = null, string|null $template = null): string
     {
-        $sitePath = static::$sitePath ?? static::$site_path;
+        $sitePath = static::$sitePath;
         if (empty($sitePath)) {
             $sitePath = ContentBuilder::getSitePath();
             static::$sitePath = $sitePath;
-            static::$site_path = $sitePath;
         }
 
-        $footerContent = $this->footerContent ?? $this->footer_content;
-        if (!empty($footerContent)) {
-            return $footerContent;
+        if (!empty($this->footerContent)) {
+            return $this->footerContent;
         }
 
         if (empty($alias)) {
             $alias = $this->getAlias();
         }
-        $templateDir = ContentBuilder::$templateDirectory ?? ContentBuilder::$template_directory;
+        $templateDir = ContentBuilder::$templateDirectory;
         $templateExt = ContentBuilder::getTemplateExtension();
         if (empty($template)) {
             $template = $sitePath . $templateDir . '/'
@@ -742,10 +711,9 @@ class PageBuilder
             $this->cb->reset($template, $replacements);
 
             $this->footerContent = $this->cb->getContent();
-            $this->footer_content = $this->footerContent;
         }
 
-        return $this->footerContent ?? $this->footer_content ?? '';
+        return $this->footerContent ?? '';
     }
 
     public function getBodyContent(string|null $alias = null, string $attributes = ''): string
@@ -754,19 +722,17 @@ class PageBuilder
             $alias = $this->getAlias();
         }
 
-        $bodyContent = $this->bodyContent ?? $this->body_content;
-        if (!empty($bodyContent)) {
-            return $bodyContent;
+        if (!empty($this->bodyContent)) {
+            return $this->bodyContent;
         }
 
         $replacements = $this->getReplacements();
 
-        $bodyAttrs = $this->bodyAttributes ?? $this->body_attributes;
-        if (!empty($bodyAttrs)) {
-            $attributes .= $bodyAttrs;
+        if (!empty($this->bodyAttributes)) {
+            $attributes .= $this->bodyAttributes;
         }
 
-        $templateDir = ContentBuilder::$templateDirectory ?? ContentBuilder::$template_directory;
+        $templateDir = ContentBuilder::$templateDirectory;
         $templateExt = ContentBuilder::getTemplateExtension();
 
         if ($this->hasType()) {
@@ -786,9 +752,8 @@ class PageBuilder
         $this->cb->reset($templateDir . '/body.' . $templateExt, $replacements);
 
         $this->bodyContent = $this->cb->getContent();
-        $this->body_content = $this->bodyContent;
 
-        return $this->bodyContent ?? $this->body_content ?? '';
+        return $this->bodyContent ?? '';
     }
 
     public function getPageContent(string|null $alias = null, string $attributes = ''): string
@@ -813,7 +778,7 @@ class PageBuilder
 
         $replacements = array_merge($replacements, $this->getReplacements());
 
-        $templateDir = ContentBuilder::$templateDirectory ?? ContentBuilder::$template_directory;
+        $templateDir = ContentBuilder::$templateDirectory;
         $templateExt = ContentBuilder::getTemplateExtension();
 
         $this->cb->reset($templateDir . '/page.' . $templateExt, $replacements);
