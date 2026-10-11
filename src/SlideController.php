@@ -7,11 +7,8 @@ namespace Sitesketch;
 class SlideController
 {
     public static $webDirectory = 'web';
-    public static $web_directory = 'web';
     public static $sitePath;
-    public static $site_path;
     public static $slidesWebpath = '/images/slides/';
-    public static $slides_webpath = '/images/slides/';
 
     private static $dbh;
     private static $cb;
@@ -38,7 +35,6 @@ class SlideController
 
         if (!isset(self::$sitePath) || !self::$sitePath) {
             self::$sitePath = ContentBuilder::getSitePath();
-            self::$site_path = self::$sitePath;
         }
 
         if ($dbhIn) {
@@ -56,14 +52,10 @@ class SlideController
 
     public static function getSlidesPath()
     {
-        $sitePath = self::$sitePath ?? self::$site_path;
-        if (!isset($sitePath) || !$sitePath) {
-            $sitePath = ContentBuilder::getSitePath();
-            self::$sitePath = $sitePath;
-            self::$site_path = $sitePath;
+        if (!isset(self::$sitePath) || !self::$sitePath) {
+            self::$sitePath = ContentBuilder::getSitePath();
         }
-        $webDir = self::$webDirectory ?? self::$web_directory;
-        return $sitePath . DIRECTORY_SEPARATOR . $webDir . DIRECTORY_SEPARATOR . 'images'
+        return self::$sitePath . DIRECTORY_SEPARATOR . self::$webDirectory . DIRECTORY_SEPARATOR . 'images'
             . DIRECTORY_SEPARATOR . 'slides';
     }
 
@@ -129,7 +121,7 @@ class SlideController
             . self::$thumbnailDirectory . DIRECTORY_SEPARATOR . '*');
 
         $thumbnails = [];
-        $slidesWebpath = self::$slidesWebpath ?? self::$slides_webpath;
+        $slidesWebpath = self::$slidesWebpath;
 
         // Clean out directories and clean off the slide path
         foreach ($thumbnailCandidates as &$tc) {
@@ -217,7 +209,7 @@ class SlideController
 
         if (count($slides) > 1) {
             // We need to make the slide paths webroot-relative
-            $slidesWebpath = self::$slidesWebpath ?? self::$slides_webpath;
+            $slidesWebpath = self::$slidesWebpath;
             if ($slidesWebpath) {
                 foreach ($slides as &$s) {
                     $s = $slidesWebpath
