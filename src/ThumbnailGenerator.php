@@ -9,20 +9,14 @@ class ThumbnailGenerator
     private static $defaultImagesDirectory = 'images';
 
     public $workingWebPath;
-    public $working_web_path;
     public $webrootPath;
-    public $webroot_path;
     public $workingPath;
-    public $working_path;
 
     public $userGroup = 'dev';
-    public $user_group = 'dev';
     public $setUserGroup = true;
-    public $set_user_group = true;
 
     protected $images;
     protected $thumbnailSizes;
-    protected $thumbnail_sizes;
 
     public function __construct($workingWebPath, $thumbnailSizes = false)
     {
@@ -33,7 +27,6 @@ class ThumbnailGenerator
             return false;
         } else {
             $this->workingWebPath = $workingWebPath;
-            $this->working_web_path = $workingWebPath;
         }
 
         if (isset($thumbnailSizes) && is_array($thumbnailSizes)) {
@@ -43,11 +36,8 @@ class ThumbnailGenerator
 
     public function resolveWorkingPath($workingWebPath = false)
     {
-        $currentWorkingPath = $this->workingPath ?? $this->working_path;
-        $currentWorkingWebPath = $this->workingWebPath ?? $this->working_web_path;
-
-        if (!$currentWorkingPath || $currentWorkingWebPath != $workingWebPath) {
-            $webroot = $this->webrootPath ?? $this->webroot_path;
+        if (!$this->workingPath || $this->workingWebPath != $workingWebPath) {
+            $webroot = $this->webrootPath;
             if (!isset($webroot) || !$webroot) {
                 $webroot = $this->resolveWebrootPath();
             }
@@ -60,30 +50,26 @@ class ThumbnailGenerator
 
             if (is_dir($workingPath)) {
                 $this->workingPath = $workingPath;
-                $this->working_path = $workingPath;
             } else {
                 return false;
             }
         }
 
-        return $this->workingPath ?? $this->working_path;
+        return $this->workingPath;
     }
 
     public function setThumbnailSizes($thumbnailSizes = false)
     {
         if ($thumbnailSizes && is_array($thumbnailSizes)) {
             $this->thumbnailSizes = $thumbnailSizes;
-            $this->thumbnail_sizes = $thumbnailSizes;
         }
     }
 
     public function addThumbnailSize($thumbnailSize)
     {
         if (is_array($thumbnailSize) && isset($thumbnailSize['method'])) {
-            $existing = $this->thumbnailSizes ?? $this->thumbnail_sizes ?? [];
-            $merged = array_merge($existing, $thumbnailSize);
-            $this->thumbnailSizes = $merged;
-            $this->thumbnail_sizes = $merged;
+            $existing = $this->thumbnailSizes ?? [];
+            $this->thumbnailSizes = array_merge($existing, $thumbnailSize);
             return true;
         } else {
             return false;
@@ -92,15 +78,13 @@ class ThumbnailGenerator
 
     public function resolveWebrootPath()
     {
-        $webroot = $this->webrootPath ?? $this->webroot_path;
-        if (!$webroot || !is_dir($webroot)) {
+        if (!$this->webrootPath || !is_dir($this->webrootPath)) {
             if (isset($_SERVER['DOCUMENT_ROOT']) && is_dir($_SERVER['DOCUMENT_ROOT'])) {
                 $this->webrootPath = $_SERVER['DOCUMENT_ROOT'];
-                $this->webroot_path = $_SERVER['DOCUMENT_ROOT'];
             }
         }
 
-        return $this->webrootPath ?? $this->webroot_path;
+        return $this->webrootPath;
     }
 
     public function isImage($filepath)
@@ -126,10 +110,9 @@ class ThumbnailGenerator
     {
         $filename = substr($filepath, (strrpos($filepath, '/') + 1));
         $answer = false;
-        $sizes = $this->thumbnailSizes ?? $this->thumbnail_sizes;
 
-        if (isset($sizes)) {
-            foreach ($sizes as $tsAlias => $ts) {
+        if (isset($this->thumbnailSizes)) {
+            foreach ($this->thumbnailSizes as $tsAlias => $ts) {
                 if (
                     (isset($ts['prefix']) && $ts['prefix'] && strpos($filename, $ts['prefix']) !== false)
                     || (isset($ts['postfix']) && $ts['postfix'] && strpos($filename, $ts['postfix']) !== false)
@@ -151,37 +134,31 @@ class ThumbnailGenerator
 
     private function resolveImages($workingWebPath = false, $doSort = true)
     {
-        $currentWorkingWebPath = $this->workingWebPath ?? $this->working_web_path;
-        $currentWorkingPath = $this->workingPath ?? $this->working_path;
-        $webroot = $this->webrootPath ?? $this->webroot_path;
-
         if (
             !$this->images
             || !is_array($this->images)
-            || ($workingWebPath && $workingWebPath != $currentWorkingWebPath)
+            || ($workingWebPath && $workingWebPath != $this->workingWebPath)
         ) {
             $this->images = [];
 
-            if (!$workingWebPath && $currentWorkingWebPath) {
-                $workingWebPath = $currentWorkingWebPath;
+            if (!$workingWebPath && $this->workingWebPath) {
+                $workingWebPath = $this->workingWebPath;
             } else {
                 return false;
             }
 
-            if (!$currentWorkingPath || $currentWorkingWebPath != $workingWebPath) {
+            if (!$this->workingPath || $this->workingWebPath != $workingWebPath) {
                 $this->resolveWorkingPath($workingWebPath);
-                $currentWorkingPath = $this->workingPath ?? $this->working_path;
-                $webroot = $this->webrootPath ?? $this->webroot_path;
             }
 
             $filenames = [];
-            $dp = opendir($currentWorkingPath);
+            $dp = opendir($this->workingPath);
             while ($filename = readdir($dp)) {
                 $webFilepath = $workingWebPath . '/' . $filename;
                 if (
                     $this->isImage($filename)
                     && !$this->isThumbnail($webFilepath)
-                    && is_file($webroot . $webFilepath)
+                    && is_file($this->webrootPath . $webFilepath)
                 ) {
                     $filenames[] = $filename;
                 }
@@ -198,9 +175,9 @@ class ThumbnailGenerator
                     $tempImage = [];
                     $tempImageData = [];
                     $tempExtendedImageData = [];
-                    if (is_file($webroot . $webFilepath)) {
+                    if (is_file($this->webrootPath . $webFilepath)) {
                         $tempImageData = @getimagesize(
-                            $webroot . $webFilepath,
+                            $this->webrootPath . $webFilepath,
                             $tempExtendedImageData
                         );
                     }
@@ -240,9 +217,8 @@ class ThumbnailGenerator
         ini_set('memory_limit', '100M');
         set_time_limit(3600);
 
-        $sizes = $this->thumbnailSizes ?? $this->thumbnail_sizes;
-        if (is_string($options) && isset($sizes[$options])) {
-            $options = $sizes[$options];
+        if (is_string($options) && isset($this->thumbnailSizes[$options])) {
+            $options = $this->thumbnailSizes[$options];
         }
 
         $originalSize = getimagesize($originalFilepath);
@@ -346,8 +322,7 @@ class ThumbnailGenerator
         $result = false;
         if (imagejpeg($thumbnailImage, $thumbnailFilepath, $quality)) {
             chmod($thumbnailFilepath, 0664);
-            $userGroup = $this->userGroup ?? $this->user_group;
-            @chgrp($thumbnailFilepath, $userGroup);
+            @chgrp($thumbnailFilepath, $this->userGroup);
             $result = true;
         }
         imagedestroy($thumbnailImage);
@@ -366,12 +341,8 @@ class ThumbnailGenerator
             return false;
         }
 
-        $sizes = $this->thumbnailSizes ?? $this->thumbnail_sizes;
-        $webroot = $this->webrootPath ?? $this->webroot_path;
-        $userGroup = $this->userGroup ?? $this->user_group;
-
         foreach ($this->images as &$i) {
-            foreach ($sizes as $tsAlias => $ts) {
+            foreach ($this->thumbnailSizes as $tsAlias => $ts) {
                 if (
                     (isset($ts['prefix']) && $ts['prefix'])
                     || (isset($ts['postfix']) && $ts['postfix'])
@@ -382,7 +353,7 @@ class ThumbnailGenerator
                     $thumbnailWebFilepath = $i['web_path'] . '/' . (isset($ts['prefix']) ? $ts['prefix'] : '')
                         . $filenameBase . (isset($ts['postfix']) ? $ts['postfix'] : '') . '.' . $extension;
                 } else {
-                    $targetDir = $webroot . $i['web_path'] . '/' . $tsAlias;
+                    $targetDir = $this->webrootPath . $i['web_path'] . '/' . $tsAlias;
                     if (!is_dir($targetDir)) {
                         if (!mkdir($targetDir)) {
                             $username = exec('whoami');
@@ -390,17 +361,17 @@ class ThumbnailGenerator
                             return false;
                         }
                         $chmodResult = chmod($targetDir, 0775);
-                        $chgrpResult = @chgrp($targetDir, $userGroup);
+                        $chgrpResult = @chgrp($targetDir, $this->userGroup);
                         if (!$chgrpResult && $chmodResult) {
                             chmod($targetDir, 0777);
                         }
                     }
                     $thumbnailWebFilepath = $i['web_path'] . '/' . $tsAlias . '/' . $i['filename'];
                 }
-                if ($forceCreation || !is_file($webroot . $thumbnailWebFilepath)) {
+                if ($forceCreation || !is_file($this->webrootPath . $thumbnailWebFilepath)) {
                     $this->createThumbnail(
-                        $webroot . $i['web_path'] . '/' . $i['filename'],
-                        $webroot . $thumbnailWebFilepath,
+                        $this->webrootPath . $i['web_path'] . '/' . $i['filename'],
+                        $this->webrootPath . $thumbnailWebFilepath,
                         $ts
                     );
                 }
