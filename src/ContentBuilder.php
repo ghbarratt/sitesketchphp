@@ -7,54 +7,33 @@ namespace Sitesketch;
 class ContentBuilder
 {
     public static $templateExtension = 'tpl';
-    public static $template_extension = 'tpl';
     public static $templateDirectory = 'templates';
-    public static $template_directory = 'templates';
     public static $endOfLine = "\n";
-    public static $end_of_line = "\n";
     public static $indentationUnit = "\t";
-    public static $indentation_unit = "\t";
     public static $singularizePluralMagicKeys = false;
-    public static $singularize_plural_magic_keys = false;
     public static $webDirectory = 'public';
-    public static $web_directory = 'public';
     public static $sitePath;
-    public static $site_path;
     public static $siteWebPath;
-    public static $site_web_path;
     public static $sitesketchPath;
-    public static $sitesketch_path;
 
     protected static $tagBang = '!';
-    protected static $tag_bang = '!';
     protected static $tagPrefix = '~';
-    protected static $tag_prefix = '~';
     protected static $tagPostfix = '~';
-    protected static $tag_postfix = '~';
     protected static $tagOpenPrefix = '~';
-    protected static $tag_open_prefix = '~';
     protected static $tagOpenPostfix = '{';
-    protected static $tag_open_postfix = '{';
     protected static $tagClosePrefix = '}';
-    protected static $tag_close_prefix = '}';
     protected static $tagClosePostfix = '~';
-    protected static $tag_close_postfix = '~';
 
     public $linePrefix = '';
     public $replacements;
     public $removeLeftoverTags = true;
-    public $remove_leftover_tags = true;
     public $useSmartIndentation = false; // faster
-    public $use_smart_indentation = false;
 
     protected $template;
     protected $content;
     protected $hasPlacedReplacements = false;
-    protected $has_placed_replacements = false;
     protected $evalOpenTag = '~eval(';
-    protected $eval_open_tag = '~eval(';
     protected $evalCloseTag = ')eval~';
-    protected $eval_close_tag = ')eval~';
     protected $errors = [];
 
     public function __construct(
@@ -92,14 +71,12 @@ class ContentBuilder
         }
         if ($templateDirectory) {
             self::$templateDirectory = $templateDirectory;
-            self::$template_directory = $templateDirectory;
         }
         if ($linePrefix) {
             $this->linePrefix = $linePrefix;
         }
         if ($indentationUnit) {
             $this->indentationUnit = $indentationUnit;
-            $this->indentation_unit = $indentationUnit;
         }
 
         return true;
@@ -107,32 +84,26 @@ class ContentBuilder
 
     public static function getSitesketchPath()
     {
-        $path = self::$sitesketchPath ?? self::$sitesketch_path;
-        if ($path) {
-            return $path;
+        if (self::$sitesketchPath) {
+            return self::$sitesketchPath;
         }
 
         // What is the directory of the Sitesketch package root?
-        $path = dirname(__DIR__);
-        self::$sitesketchPath = $path;
-        self::$sitesketch_path = $path;
+        self::$sitesketchPath = dirname(__DIR__);
 
-        return $path;
+        return self::$sitesketchPath;
     }
 
     public static function getSitePath()
     {
-        $sitePath = self::$sitePath ?? self::$site_path;
-        if (isset($sitePath) && strlen($sitePath)) {
-            return $sitePath;
+        if (isset(self::$sitePath) && strlen(self::$sitePath)) {
+            return self::$sitePath;
         }
 
-        $webDir = self::$webDirectory ?? self::$web_directory;
-
-        // Attempt to use the first web directory on current path, otherwise use the web ("document") root
-        $webPos = isset($_SERVER['SCRIPT_FILENAME']) ? strrpos($_SERVER['SCRIPT_FILENAME'], $webDir) : false;
+        $scriptFilename = $_SERVER['SCRIPT_FILENAME'] ?? '';
+        $webPos = $scriptFilename !== '' ? strrpos($scriptFilename, self::$webDirectory) : false;
         if ($webPos !== false && isset($_SERVER['SCRIPT_FILENAME'])) {
-            $siteWebPath = substr($_SERVER['SCRIPT_FILENAME'], 0, $webPos + strlen($webDir));
+            $siteWebPath = substr($_SERVER['SCRIPT_FILENAME'], 0, $webPos + strlen(self::$webDirectory));
         } elseif (isset($_SERVER['DOCUMENT_ROOT'])) {
             $siteWebPath = $_SERVER['DOCUMENT_ROOT'];
         } else {
@@ -140,19 +111,16 @@ class ContentBuilder
         }
 
         self::$siteWebPath = $siteWebPath;
-        self::$site_web_path = $siteWebPath;
 
         // Usually site path is one directory up from the site web path
-        $sitePath = dirname($siteWebPath);
-        self::$sitePath = $sitePath;
-        self::$site_path = $sitePath;
+        self::$sitePath = dirname($siteWebPath);
 
-        return $sitePath;
+        return self::$sitePath;
     }
 
     public static function getTemplateExtension()
     {
-        return self::$templateExtension ?? self::$template_extension;
+        return self::$templateExtension;
     }
 
     public function setTemplate($template)
@@ -165,17 +133,14 @@ class ContentBuilder
         $template = str_replace('.' . $ext . '.' . $ext, '.' . $ext, $template);
 
         $this->hasPlacedReplacements = false;
-        $this->has_placed_replacements = false;
-
-        $templateDir = self::$templateDirectory ?? self::$template_directory;
 
         $filepathsToTry = [
             $template,
             self::getSitePath() . '/' . $template,
-            self::getSitePath() . '/' . $templateDir . '/' . $template,
+            self::getSitePath() . '/' . self::$templateDirectory . '/' . $template,
             self::getSitePath() . '/templates/' . $template,
             self::getSitesketchPath() . '/resources/' . $template,
-            self::getSitesketchPath() . '/resources/' . $templateDir . '/' . $template,
+            self::getSitesketchPath() . '/resources/' . self::$templateDirectory . '/' . $template,
             self::getSitesketchPath() . '/resources/templates/' . $template,
         ];
 
@@ -199,12 +164,11 @@ class ContentBuilder
     public function useSmartIndentation($use = true)
     {
         $this->useSmartIndentation = $use;
-        $this->use_smart_indentation = $use;
     }
 
     public function adjustIndentation($amount = false)
     {
-        $indentUnit = $this->indentationUnit ?? $this->indentation_unit ?? self::$indentationUnit;
+        $indentUnit = $this->indentationUnit ?? self::$indentationUnit;
         $linePrefix = $this->linePrefix ?? '';
 
         if ($amount > 0) {
@@ -278,20 +242,8 @@ class ContentBuilder
 
         $content = $templateContent;
 
-        $tagOpenPrefix = self::$tagOpenPrefix ?? self::$tag_open_prefix;
-        $tagBang = self::$tagBang ?? self::$tag_bang;
-        $tagOpenPostfix = self::$tagOpenPostfix ?? self::$tag_open_postfix;
-        $tagClosePrefix = self::$tagClosePrefix ?? self::$tag_close_prefix;
-        $tagClosePostfix = self::$tagClosePostfix ?? self::$tag_close_postfix;
-        $tagPrefix = self::$tagPrefix ?? self::$tag_prefix;
-        $tagPostfix = self::$tagPostfix ?? self::$tag_postfix;
-        $endOfLine = self::$endOfLine ?? self::$end_of_line;
-        $indentationUnit = self::$indentationUnit ?? self::$indentation_unit;
-        $removeLeftoverTags = $this->removeLeftoverTags ?? $this->remove_leftover_tags;
-        $useSmartIndentation = $this->useSmartIndentation ?? $this->use_smart_indentation;
-
         // Find regular tags
-        $pattern = '/' . $tagOpenPrefix . '(' . $tagBang . '?[A-z0-9,_]+)' . $tagOpenPostfix . '/';
+        $pattern = '/' . self::$tagOpenPrefix . '(' . self::$tagBang . '?[A-z0-9,_]+)' . self::$tagOpenPostfix . '/';
         $matchCount = preg_match_all($pattern, $content, $matches);
 
         if ($matchCount) {
@@ -306,14 +258,14 @@ class ContentBuilder
             foreach ($embedTags as $embedTagIndex => $tag) {
                 $noBangTag = $tag;
 
-                if (strpos($tag, $tagBang) !== false) {
-                    $noBangTag = substr($tag, strlen($tagBang));
+                if (strpos($tag, self::$tagBang) !== false) {
+                    $noBangTag = substr($tag, strlen(self::$tagBang));
 
                     if (!isset($replacements[$noBangTag]) || !$replacements[$noBangTag]) {
                         $replacements[$tag] = $replacements;
                     }
                 } else {
-                    if ($removeLeftoverTags && !in_array($tag, array_keys($replacements))) {
+                    if ($this->removeLeftoverTags && !in_array($tag, array_keys($replacements))) {
                         $replacements[$tag] = '';
                     }
                 }
@@ -336,8 +288,8 @@ class ContentBuilder
                         }
                     }
 
-                    $openTag = $tagOpenPrefix . $tag . $tagOpenPostfix;
-                    $closeTag = $tagClosePrefix . $tag . $tagClosePostfix;
+                    $openTag = self::$tagOpenPrefix . $tag . self::$tagOpenPostfix;
+                    $closeTag = self::$tagClosePrefix . $tag . self::$tagClosePostfix;
 
                     $offset = 0;
                     $cutStart = strpos($content, $openTag, $offset);
@@ -376,9 +328,7 @@ class ContentBuilder
                                         && !empty($value[$firstKey])
                                         && !is_array($value[$firstKey])
                                     ) {
-                                        $magic = self::$singularizePluralMagicKeys
-                                            ?? self::$singularize_plural_magic_keys;
-                                        if ($magic) {
+                                        if (self::$singularizePluralMagicKeys) {
                                             $newKey = self::singularize($tag);
                                         } else {
                                             $newKey = $tag;
@@ -430,7 +380,7 @@ class ContentBuilder
             }
 
             // Now do the regular tags ...
-            $pattern = '/' . $tagPrefix . '([A-z0-9,_]+)' . $tagPostfix . '/';
+            $pattern = '/' . self::$tagPrefix . '([A-z0-9,_]+)' . self::$tagPostfix . '/';
             $matchCount = preg_match_all($pattern, $content, $matches);
 
             if ($matchCount) {
@@ -441,7 +391,7 @@ class ContentBuilder
 
             foreach ($replacementTags as $tag) {
                 if (
-                    $removeLeftoverTags
+                    $this->removeLeftoverTags
                     && (!isset($replacements[$tag])
                     || !in_array($tag, array_keys($replacements))
                     || $replacements[$tag] === null)
@@ -468,7 +418,7 @@ class ContentBuilder
                         $value = $newValue;
                     }
 
-                    if (is_string($value) && substr_count($value, $endOfLine)) {
+                    if (is_string($value) && substr_count($value, self::$endOfLine)) {
                         $deleteEndCharacters = [' ', "\n", "\r", "\t"];
                         $cutoffPos = strlen($value) - 1;
                         if (strlen(trim($value))) {
@@ -478,7 +428,7 @@ class ContentBuilder
                             $value = substr($value, 0, $cutoffPos + 1);
                         }
 
-                        if ($useSmartIndentation) {
+                        if ($this->useSmartIndentation) {
                             $offset = 0;
                             while ($offset < strlen($content) && $cutStart = strpos($content, $tag, $offset)) {
                                 $offset = $cutStart + strlen($tag);
@@ -487,22 +437,22 @@ class ContentBuilder
                                 if ($indentationEnd > 0) {
                                     $indentationOffset = -(strlen($content) - ($indentationEnd));
 
-                                    $indentationStart = strrpos($content, $endOfLine, $indentationOffset)
-                                        + strlen($endOfLine);
+                                    $indentationStart = strrpos($content, self::$endOfLine, $indentationOffset)
+                                        + strlen(self::$endOfLine);
                                     $indentationMaterial = substr(
                                         $content,
                                         $indentationStart,
                                         ($indentationEnd - $indentationStart)
                                     );
-                                    $indentationLevel = substr_count($indentationMaterial, $indentationUnit);
+                                    $indentationLevel = substr_count($indentationMaterial, self::$indentationUnit);
 
                                     if (
-                                        $indentationLevel * strlen($indentationUnit)
+                                        $indentationLevel * strlen(self::$indentationUnit)
                                         == strlen($indentationMaterial)
                                     ) {
                                         $value = str_replace(
-                                            $endOfLine,
-                                            $endOfLine . $indentationMaterial,
+                                            self::$endOfLine,
+                                            self::$endOfLine . $indentationMaterial,
                                             $value
                                         );
                                     }
@@ -515,17 +465,14 @@ class ContentBuilder
                         $value = (string) $value;
                     }
 
-                    $content = str_replace($tagPrefix . $tag . $tagPostfix, $value, $content);
+                    $content = str_replace(self::$tagPrefix . $tag . self::$tagPostfix, $value, $content);
                 }
             }
         }
 
         // Find eval tags
-        $evalOpen = $this->evalOpenTag ?? $this->eval_open_tag;
-        $evalClose = $this->evalCloseTag ?? $this->eval_close_tag;
-
-        $pattern = '/' . str_replace(['(', ')'], ['\(', '\)'], $evalOpen) . '(.+?)'
-            . str_replace(['(', ')'], ['\(', '\)'], $evalClose) . '/';
+        $pattern = '/' . str_replace(['(', ')'], ['\(', '\)'], $this->evalOpenTag) . '(.+?)'
+            . str_replace(['(', ')'], ['\(', '\)'], $this->evalCloseTag) . '/';
         $matchCount = preg_match_all($pattern, $content, $matches);
 
         if ($matchCount) {
@@ -543,7 +490,6 @@ class ContentBuilder
         }
 
         $this->hasPlacedReplacements = true;
-        $this->has_placed_replacements = true;
 
         return $content;
     }
@@ -587,7 +533,7 @@ class ContentBuilder
     {
         if (!is_file($filepath)) {
             if (!$templateDirectory) {
-                $templateDirectory = self::$templateDirectory ?? self::$template_directory;
+                $templateDirectory = self::$templateDirectory;
             }
             if (is_file(($templateDirectory ? $templateDirectory . '/' : '') . $filepath)) {
                 $filepath = ($templateDirectory ? $templateDirectory . '/' : '') . $filepath;
