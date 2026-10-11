@@ -1,5 +1,6 @@
 {
     "name": "ghbarratt/sitesketchphp",
+    "version": "2.0.0",
     "description": "SitesketchPHP Microframework",
     "type": "library",
     "license": "MIT",
