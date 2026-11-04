@@ -324,7 +324,7 @@ class ContentBuilder
                                     reset($value);
                                     $firstKey = key($value);
                                     if (
-                                        !empty($firstKey)
+                                        !is_null($firstKey)
                                         && !empty($value[$firstKey])
                                         && !is_array($value[$firstKey])
                                     ) {
